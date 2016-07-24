@@ -17,9 +17,10 @@
     <div class="container" id="menu">
       <div class="row" id="options">
         <div class="col s12">
-          <div class="card white">
-            <div class="card-content black-text">
-              <span class="card-title">Options<a class="btn-floating btn-medium waves-effect waves-light red navButton" id="optionsButton"><i class="material-icons">menu</i></a></span>
+          <ul class="collapsible" data-collapsible="accordion">
+          <li>
+            <div class="collapsible-header"><i class="material-icons">settings</i>Settings</div>
+            <div class="collapsible-body">
               <ul id="optionsList">
                 <li>
                   Pan
@@ -59,23 +60,11 @@
                 </li>
               </ul>
             </div>
-          </div>
+          </li>
+        </ul>
         </div>
       </div>
-      <div class="row" id="trainer">
-        <div class="col s12">
-          <div class="card white">
-            <div class="card-content black-text">
-              <span class="card-title">Trainer<a class="btn-floating btn-medium waves-effect waves-light red navButton" id="trainerButton"><i class="material-icons">menu</i></a></span>
-            <ul id="trainerList">
-              <li><a class="waves-effect waves-light btn" id="tInfo">Info</a></li><br>
-              <li><a class="waves-effect waves-light btn" id="tItems">Items</a></li><br>
-              <li><a class="waves-effect waves-light btn" id="tPokemon">Pokemon</a></li><br>
-              <li><a class="waves-effect waves-light btn" id="tPokedex">Pokedex</a></li>
-            </ul>
-            </div>
-          </div>
-        </div>
+      <div class="row" id="trainers">
       </div>
     </div>
 
@@ -84,6 +73,7 @@
           <div class="card white">
             <div class="card-content black-text">
               <span class="card-title" id="subtitle">Submenu</span>
+              <span id="close">×</span>
               <div id="subcontent"></div>
             </div>
           </div>
