@@ -12,20 +12,26 @@ html, body {
 	top: 10px;
 	z-index: 5;
 	height: auto;
-	width: auto;
+	width: 180px;
 }
 #submenu {
 	position: fixed;
-	left: 20px;
-	top: 30%;
-	max-height: 400px;
+	left: 50%;
+	top: 10px;
+    transform: translate(-50%, 0);
 	width: 50%;
 	z-index: 6;
 	display: none;
 }
+#close {
+	float: right;
+	font-size: 32px;
+	cursor: pointer;
+	line-height: 48px;
+}
 .items {
-	max-height: 350px !important;
 	overflow-y: scroll;
+	height: 80vh; 
 }
 .item_img {
 	width: 75px;
@@ -39,18 +45,52 @@ html, body {
 	width: 96px;
 	height: auto;
 }
-.png_img_small {
-	width: 50px;
-	height: auto;
-}
 .navButton {
 	position: relative;
 	top: -30px;
 	right: -30px;
 }
-#optionsList {
-	display: none;
+.row {
+	margin-bottom: 0;
 }
-#trainerList {
-	display: none;
+.collapsible-body a {
+	width: 100%;
+}
+#toast-container {
+  top: auto !important;
+  right: auto !important;
+  bottom: 10%;
+  left:7%;  
+}
+#bots-list {
+	overflow-y: scroll;
+    max-height: 80vh;
+}
+#bots-list::-webkit-scrollbar { 
+    display: none; 
+}
+.collapsible-body {
+	background: #FFF;
+	padding: 1em;
+}
+.card .card-content {
+    padding: 10px 20px 20px 20px;
+}
+.collapsible-title {
+	display: block;
+    min-height: 3rem;
+    line-height: 3rem;
+    padding: 0 1rem;
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+.collapsible-title i {
+    width: 2rem;
+    font-size: 1.6rem;
+    line-height: 3rem;
+    display: block;
+    float: left;
+    text-align: center;
+    margin-right: 1rem;
 }

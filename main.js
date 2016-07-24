@@ -1,6 +1,9 @@
 var i;
 var map;
-var menu;
+var openFlag1 = false;
+var openFlag2 = false;
+var openFlag3 = false;
+var openFlag4 = false;
 var out1;
 var out;
 var user_index;
@@ -31,7 +34,7 @@ var inventory = {};
 var playerInfo = {};
 var pokedex = {};
 var pokemonArray = {};
-var stats = makeArrays();
+var stats = {};
 var user_data = {};
 var itemsArray = {
   '0': 'Unknown',
@@ -92,15 +95,10 @@ function initMap() {
   document.getElementById('switchPan').checked = userFollow;
   document.getElementById('switchZoom').checked = userZoom;
   document.getElementById('imageType').checked = (imageExt != '.png');
-  setTimeout(function(){
-    placeTrainer();
-    addCatchable();
-    addInventory();
-    setTimeout(function(){
-      setInterval(updateTrainer, 1000);
-      setInterval(addCatchable, 1000);
-    }, 5000);
-  }, 5000);
+  placeTrainer();
+  addCatchable();
+  setInterval(updateTrainer, 1000);
+  setInterval(addCatchable, 1000);
 }
 
 $('#switchPan').change(function(){
@@ -131,73 +129,16 @@ $('#optionsButton').click(function(){
     $('#optionsList').toggle();
 });
 
-$('#trainerButton').click(function(){
-    $('#trainerList').toggle();
-});
-
-$('#tInfo').click(function(){
-    if (menu == undefined || menu == 1) {
-      $('#submenu').toggle();
-    }
-    if (menu != 1 && $('#submenu').is(':hidden')) {
-      $('#submenu').toggle();
-    }
-    menu = 1;
-    buildMenu();
-});
-
-$('#tItems').click(function(){
-    if (menu == undefined || menu == 2) {
-      $('#submenu').toggle();
-    }
-    if (menu != 2 && $('#submenu').is(':hidden')) {
-      $('#submenu').toggle();
-    }
-    menu = 2;
-    buildMenu();
-});
-
-$('#tPokemon').click(function(){
-    if (menu == undefined || menu == 3) {
-      $('#submenu').toggle();
-    }
-    if (menu != 3 && $('#submenu').is(':hidden')) {
-      $('#submenu').toggle();
-    }
-    menu = 3;
-    buildMenu();
-});
-
-$('#tPokedex').click(function(){
-    if (menu == undefined || menu == 4) {
-      $('#submenu').toggle();
-    }
-    if (menu != 4 && $('#submenu').is(':hidden')) {
-      $('#submenu').toggle();
-    }
-    menu = 4;
-    buildMenu();
-});
-
-
 var errorFunc = function(xhr) {
   console.error(xhr);
 };
 
-function makeArrays() {
-  var tempArr = {};
-  for(i = 0; i < users.length; i ++) {
-    tempArr[users[i]] = {};
-  }
-  return tempArr;
-}
-
 var invSuccess = function(data, user_index) {
-  bagCandy[users[user_index]] = filter(data, 'pokemon_family');
-  bagItems[users[user_index]] = filter(data, 'item');
-  bagPokemon[users[user_index]] = filter(data, 'pokemon_data');
-  pokedex[users[user_index]] = filter(data, 'pokedex_entry');
-  stats[users[user_index]] = filter(data, 'player_stats');
+  user_data[users[user_index]].bagCandy = filter(data, 'pokemon_family');
+  user_data[users[user_index]].bagItems = filter(data, 'item');
+  user_data[users[user_index]].bagPokemon = filter(data, 'pokemon_data');
+  user_data[users[user_index]].pokedex = filter(data, 'pokedex_entry');
+  user_data[users[user_index]].stats = filter(data, 'player_stats');
 };
 
 var trainerFunc = function(data, user_index) {
@@ -251,7 +192,9 @@ var trainerFunc = function(data, user_index) {
     }
   }
   if (user_data[users[user_index]].hasOwnProperty('marker') === false) {
-    Materialize.toast('New Marker: Trainer - ' + data.lat + ', ' + data.lng + users[user_index], 3000, 'rounded');
+    buildTrainerList();
+    addInventory();
+    Materialize.toast('New Marker: Trainer - ' + users[user_index], 3000);
     randomSex = Math.floor(Math.random() * 1);
     user_data[users[user_index]].marker = new google.maps.Marker({
       map: map,
@@ -293,7 +236,7 @@ var catchSuccess = function(data, user_index) {
     if (data.latitude !== undefined) {
       if (user_data[users[user_index]].catchables.hasOwnProperty(data.spawnpoint_id) === false) {
         poke_name = pokemonArray[data.pokemon_id-1].Name;
-        Materialize.toast(poke_name + ' appeared near trainer: ' + users[user_index], 3000, 'rounded');
+        Materialize.toast(poke_name + ' appeared near trainer: ' + users[user_index], 3000);
         user_data[users[user_index]].catchables[data.spawnpoint_id] = new google.maps.Marker({
           map: map,
           position: {lat: parseFloat(data.latitude), lng: parseFloat(data.longitude)},
@@ -320,7 +263,7 @@ var catchSuccess = function(data, user_index) {
     }
   } else {
     if (user_data[users[user_index]].catchables !== undefined && Object.keys(user_data[users[user_index]].catchables).length > 0) {
-      Materialize.toast('The Pokemon has been caught or fled' + users[user_index], 3000, 'rounded');
+      Materialize.toast('The Pokemon has been caught or fled '  + users[user_index], 3000);
       for (var key in user_data[users[user_index]].catchables) {
         user_data[users[user_index]].catchables[key].setMap(null);
       }
@@ -375,192 +318,218 @@ xhr.open('GET', path, true);
 xhr.send();
 }
 
+// Init tooltip
+
 $(document).ready(function(){
   $('.tooltipped').tooltip({delay: 50});
 });
 
-function buildMenu() {
-  addInventory();
+// Bots list and menus
+
+$(document).on('click','.tInfo',function(){
+  if (!openFlag1) {
+    buildMenu($(this).closest("ul").attr("user_id"),1);
+    openFlag1 = true;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  } else {
+    $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  }
+});
+
+$(document).on('click','.tItems',function(){
+  if (!openFlag2) {
+    buildMenu($(this).closest("ul").attr("user_id"),2);
+    openFlag2 = true;
+    openFlag1 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  } else {
+    $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  }
+});
+
+$(document).on('click','.tPokemon',function(){
+  if (!openFlag3) {
+    buildMenu($(this).closest("ul").attr("user_id"),3);
+    openFlag3 = true;
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag4 = false;
+  } else {
+    $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  }
+});
+
+$(document).on('click','.tPokedex',function(){
+  if (!openFlag4) {
+    buildMenu($(this).closest("ul").attr("user_id"),4);
+    openFlag4 = true;
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+  } else {
+    $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  }
+});
+
+$(document).on('click','#close',function(){
+  $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+});
+
+$(document).on('click','.bot-name',function(){
+  if (openFlag1 || openFlag2 || openFlag3 || openFlag4) {
+    $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  }
+});
+
+function buildTrainerList() {
+  var out = '<div class="col s12"><ul id="bots-list" class="collapsible" data-collapsible="accordion"> \
+              <li><div class="collapsible-title"><i class="material-icons">people</i>Bots</div></li>';
+  for(var i = 0; i < users.length; i++)
+  {
+    out += '<li><div class="collapsible-header bot-name">'+users[i]+
+           '</div><div class="collapsible-body"><ul user_id="'+i+'">\
+           <li><a class="indigo waves-effect waves-light btn tInfo">Info</a></li><br>\
+           <li><a class="indigo waves-effect waves-light btn tItems">Items</a></li><br>\
+           <li><a class="indigo waves-effect waves-light btn tPokemon">Pokemon</a></li><br>\
+           <li><a class="indigo waves-effect waves-light btn tPokedex">Pokedex</a></li>\
+           </ul> \
+           </div>\
+           </li>';
+  }
+  out += "</ul></div>";
+  document.getElementById('trainers').innerHTML = out;
+  $('.collapsible').collapsible();
+}
+
+function buildMenu(user_id, menu) {
+  $("#submenu").show();
   if (menu == 1) {
     document.getElementById('subtitle').innerHTML = 'Trainer Info';
-    out = '<div class="row"><div class="col s12"><ul class="tabs">';
-    for (i = 0; i < users.length; i++) {
-      out += '<li class="tab col s3"><a href="#tabI' +
-              users[i] +
-              '">' +
-              users[i] +
-              '</a></li>';
-    }
-    out += '</ul></div>';
-    for (i = 0; i < users.length; i++) {
-      out += '<div id="tabI' +
-              users[i] +
-              '" class="col s12"><h5>' +
-              users[i] +
+    out = '';
+    var current_user_stats = user_data[users[user_id]].stats[0].inventory_item_data.player_stats;
+      out += '<div class="row"><div class="col s12"><h5>' +
+              users[user_id] +
               '</h5><br>Level: ' +
-              stats[users[i]][0].inventory_item_data.player_stats.level +
+              current_user_stats.level +
               '<br>Exp: ' +
-              stats[users[i]][0].inventory_item_data.player_stats.experience +
+              current_user_stats.experience +
               '<br>Exp to Lvl ' +
-              ( parseInt(stats[users[i]][0].inventory_item_data.player_stats.level, 10) + 1 ) +
+              ( parseInt(current_user_stats.level, 10) + 1 ) +
               ': ' +
-              (parseInt(stats[users[i]][0].inventory_item_data.player_stats.next_level_xp, 10) - stats[users[i]][0].inventory_item_data.player_stats.experience) +
+              (parseInt(current_user_stats.next_level_xp, 10) - current_user_stats.experience) +
               '<br>Pokemon Encountered: ' +
-              stats[users[i]][0].inventory_item_data.player_stats.pokemons_encountered +
+              current_user_stats.pokemons_encountered +
               '<br>Pokeballs Thrown: ' +
-              stats[users[i]][0].inventory_item_data.player_stats.pokeballs_thrown +
+              current_user_stats.pokeballs_thrown +
               '<br>Pokemon Caught: ' +
-              stats[users[i]][0].inventory_item_data.player_stats.pokemons_captured +
+              current_user_stats.pokemons_captured +
               '<br>Small Ratata Caught: ' +
-              stats[users[i]][0].inventory_item_data.player_stats.small_rattata_caught +
+              current_user_stats.small_rattata_caught +
               '<br>Pokemon Evolved: ' +
-              stats[users[i]][0].inventory_item_data.player_stats.evolutions +
+              current_user_stats.evolutions +
               '<br>Eggs Hatched: ' +
-              stats[users[i]][0].inventory_item_data.player_stats.eggs_hatched +
+              current_user_stats.eggs_hatched +
               '<br>Unique Pokedex Entries: ' +
-              stats[users[i]][0].inventory_item_data.player_stats.unique_pokedex_entries +
+              current_user_stats.unique_pokedex_entries +
               '<br>PokeStops Visited: ' +
-              stats[users[i]][0].inventory_item_data.player_stats.poke_stop_visits +
+              current_user_stats.poke_stop_visits +
               '<br>Kilometers Walked: ' +
-              parseFloat(stats[users[i]][0].inventory_item_data.player_stats.km_walked).toFixed(2) +
+              parseFloat(current_user_stats.km_walked).toFixed(2) +
+              '</div></div>';
+    
+    document.getElementById('subcontent').innerHTML = out;
+  }
+  if (menu == 2) {
+    var current_user_bag_items = user_data[users[user_id]].bagItems;
+    document.getElementById('subtitle').innerHTML = current_user_bag_items.length+" items in Bag";
+    out = '<div class="row items">';
+    for (i = 0; i < current_user_bag_items.length; i++) {
+      out += '<div class="col s12 m4 l3 center" style="float: left"><img src="image/items/' +
+              current_user_bag_items[i].inventory_item_data.item.item_id +
+              '.png" class="item_img"><br><b>' +
+              itemsArray[current_user_bag_items[i].inventory_item_data.item.item_id] +
+              '</b><br>Count: ' +
+              current_user_bag_items[i].inventory_item_data.item.count +
               '</div>';
     }
     out += '</div>';
     document.getElementById('subcontent').innerHTML = out;
-    $('ul.tabs').tabs();
-  }
-  if (menu == 2) {
-    document.getElementById('subtitle').innerHTML = "Items in Bag";
-    out = '<div class="row"><div class="col s12"><ul class="tabs">';
-    for (i = 0; i < users.length; i++) {
-      out += '<li class="tab col s3"><a href="#tabB' +
-              users[i] +
-              '">' +
-              users[i] +
-              '</a></li>';
-    }
-    out += '</ul></div>';
-    for (i = 0; i < users.length; i++) {
-      out += '<div id="tabB' +
-                users[i] +
-                '" class="col s12 items"><h5>' + users[i] + '</h5>';
-      for (x = 0; x < bagItems[users[i]].length; x++) {
-        out += '<table><tr><td><img src="image/items/' +
-                bagItems[users[i]][x].inventory_item_data.item.item_id +
-                '.png" class="item_img"></td><td>Item: ' +
-                itemsArray[bagItems[users[i]][x].inventory_item_data.item.item_id] +
-                '<br>Count: ' +
-                bagItems[users[i]][x].inventory_item_data.item.count +
-                '</td>';
-      }
-      out += '</tr></table></div>';
-    }
-    out += '</div>';
-    document.getElementById('subcontent').innerHTML = out;
-    $('ul.tabs').tabs();
   }
   if (menu == 3) {
-    document.getElementById('subtitle').innerHTML = "Pokemon in Bag";
-    out = '<div class="col s12"><ul class="tabs">';
-    for (i = 0; i < users.length; i++) {
-      out += '<li class="tab col s3"><a href="#tabBP' +
-              users[i] +
-              '">' +
-              users[i] +
-              '</a></li>';
-    }
-    out += '</ul></div>';
-    for (i = 0; i < users.length; i++) {
-      pkmnTotal = bagPokemon[users[i]].length;
-      out += '<div id="tabBP' +
-            users[i] +
-            '" class="col s12 items"><h5>' +
-            users[i] +
-            ' | ' +
-            pkmnTotal +
-            ' Pokemon</h5><table>';
-      for (x = 0; x < bagPokemon[users[i]].length; x++) {
-        if (bagPokemon[users[i]][x].inventory_item_data.pokemon_data.is_egg) {
-          pkmnNum = '???';
-          pkmnImage = 'Egg.png';
-          pkmnName = 'Egg';
-          pkmnCP = '';
-          pkmnMove1 = '';
-          pkmnMove2 = '';
-          ivList = '<td></td>';
-          pokeballUsed + '<td></td>';
-        } else {
-          pkmnNum = bagPokemon[users[i]][x].inventory_item_data.pokemon_data.pokemon_id;
-          pkmnImage = pad_with_zeroes(bagPokemon[users[i]][x].inventory_item_data.pokemon_data.pokemon_id, 3) + '.png';
-          pkmnName = pokemonArray[pkmnNum-1].Name;
-          pkmnCP = '<br>CP: ' + bagPokemon[users[i]][x].inventory_item_data.pokemon_data.cp;
-          pkmnMove1 = '<br>Move 1: ' + bagPokemon[users[i]][x].inventory_item_data.pokemon_data.move_1;
-          pkmnMove2 = '<br>Move 2: ' + bagPokemon[users[i]][x].inventory_item_data.pokemon_data.move_2;
-          ivAtk = bagPokemon[users[i]][x].inventory_item_data.pokemon_data.individual_attack;
-          ivDef = bagPokemon[users[i]][x].inventory_item_data.pokemon_data.individual_defense;
-          ivSta = bagPokemon[users[i]][x].inventory_item_data.pokemon_data.individual_stamina;
-          if (ivAtk === undefined) { ivAtk = 0; }
-          if (ivDef === undefined) { ivDef = 0; }
-          if (ivSta === undefined) { ivSta = 0; }
-          ivList = '<td>Attack: ' + ivAtk + '<br>Defense: ' + ivDef + '<br>Stamina: ' + ivSta + '</td>';
-          pokeballUsed = '<td><img src="image/items/' + bagPokemon[users[i]][x].inventory_item_data.pokemon_data.pokeball + '.png" class="png_img_small"></td>';
-        }
-        out += '<tr><td><img src="image/pokemon/' + 
-                pkmnImage + 
-                '" class="png_img"></td><td class="left-align">Name: ' + 
-                pkmnName +
-                '<br>Number: ' + 
-                pkmnNum + 
-                pkmnCP +
-                pkmnMove1 +
-                pkmnMove2 +
-                '</td>' +
-                ivList +
-                pokeballUsed +
-                '</tr>';
+    pkmnTotal = user_data[users[user_id]].bagPokemon.length;
+    document.getElementById('subtitle').innerHTML = pkmnTotal+" Pokemons";
+    out = '<div class="row items">';
+    user_data[users[user_id]].bagPokemon.sort(function(a, b){return b.inventory_item_data.pokemon_data.cp - a.inventory_item_data.pokemon_data.cp;});
+    for (i = 0; i < user_data[users[user_id]].bagPokemon.length; i++) {
+      var current_pokemon_data = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data;
+      if (current_pokemon_data.is_egg) {
+        continue;
+      } else {
+        pkmnNum = current_pokemon_data.pokemon_id;
+        pkmnImage = pad_with_zeroes(current_pokemon_data.pokemon_id, 3) + '.png';
+        pkmnName = pokemonArray[pkmnNum-1].Name;
+        pkmnCP = "CP "+current_pokemon_data.cp;
+        pkmnIVA = current_pokemon_data.individual_attack || 0;
+        pkmnIVD = current_pokemon_data.individual_defense || 0;
+        pkmnIVS = current_pokemon_data.individual_stamina || 0;
+        pkmnIV = ((pkmnIVA + pkmnIVD + pkmnIVS) / 45.0).toFixed(2);
       }
-      out += '</table></div>';
+      out += '<div class="col s12 m4 l3 center" style="float: left;"><img src="image/pokemon/' + pkmnImage + '" class="png_img"><br><b>' + pkmnName +
+      '</b><br>' + pkmnCP + '<br>IV '+pkmnIV+'</div>';
     }
     out += '</div>';
     document.getElementById('subcontent').innerHTML = out;
-    $('ul.tabs').tabs();
   }
   if (menu == 4) {
-    document.getElementById('subtitle').innerHTML = "Pokedex";
-    out = '<div class="col s12"><ul class="tabs">';
-    for (i = 0; i < users.length; i++) {
-      out += '<li class="tab col s3"><a href="#tabP' +
-              users[i] +
-              '">' +
-              users[i] +
-              '</a></li>';
-    }
-    out += '</ul></div>';
-    for (i = 0; i < users.length; i++) {
-      pkmnTotal = pokedex[users[i]].length;
-      out += '<div id="tabP' +
-            users[i] +
-            '" class="col s12 items"><h5>' + users[i] + ' | ' + pkmnTotal + ' / 151</h5><table>';
-      for (x = 0; x < pokedex[users[i]].length; x++) {
-        pkmnNum = pokedex[users[i]][x].inventory_item_data.pokedex_entry.pokedex_entry_number;
-        pkmnImage = pad_with_zeroes(pokedex[users[i]][x].inventory_item_data.pokedex_entry.pokedex_entry_number, 3) +'.png';
-        pkmnName = pokemonArray[pkmnNum-1].Name;
-        out += '<tr><td><img src="image/pokemon/' +
-                pkmnImage +
-                '" class="png_img"></td><td class="left-align">Name: ' +
-                pkmnName +
-                '<br>Number: ' +
-                pkmnNum +
-                '<br>Times Encountered: ' +
-                pokedex[users[i]][x].inventory_item_data.pokedex_entry.times_encountered + 
-                '<br>Times Caught: ' +
-                pokedex[users[i]][x].inventory_item_data.pokedex_entry.times_captured +
-                '</td></tr>';
-      }
-      out += '</table></div>';
+    pkmnTotal = user_data[users[user_id]].pokedex.length;
+    document.getElementById('subtitle').innerHTML = "Pokedex "+ pkmnTotal + ' / 151';
+    
+    out = '<div class="row items">';
+    for (i = 0; i < user_data[users[user_id]].pokedex.length; i++) {
+      var current_pokedex = user_data[users[user_id]].pokedex[i].inventory_item_data.pokedex_entry;
+      pkmnNum = current_pokedex.pokedex_entry_number;
+      pkmnImage = pad_with_zeroes(current_pokedex.pokedex_entry_number, 3) +'.png';
+      pkmnName = pokemonArray[pkmnNum-1].Name;
+      out += '<div class="col m6 s12"><img src="image/pokemon/' +
+              pkmnImage +
+              '" class="png_img"><br><b> ' +
+              pkmnName +
+              '</b><br>Number: ' +
+              pkmnNum +
+              '<br>Times Encountered: ' +
+              current_pokedex.times_encountered + 
+              '<br>Times Caught: ' +
+              (current_pokedex.times_captured || 0) +
+              '</div>';
     }
     out += '</div>';
     document.getElementById('subcontent').innerHTML = out;
-    $('ul.tabs').tabs();
   }
 }
