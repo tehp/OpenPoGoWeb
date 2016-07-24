@@ -367,49 +367,50 @@ function buildMenu(user_id, menu) {
   if (menu == 1) {
     document.getElementById('subtitle').innerHTML = 'Trainer Info';
     out = '';
-    var current_user_data = user_data[users[user_id]].stats[0];
+    var current_user_stats = user_data[users[user_id]].stats[0].inventory_item_data.player_stats;
       out += '<div class="row"><div class="col s12"><h5>' +
               users[user_id] +
               '</h5><br>Level: ' +
-              current_user_data.inventory_item_data.player_stats.level +
+              current_user_stats.level +
               '<br>Exp: ' +
-              current_user_data.inventory_item_data.player_stats.experience +
+              current_user_stats.experience +
               '<br>Exp to Lvl ' +
-              ( parseInt(current_user_data.inventory_item_data.player_stats.level, 10) + 1 ) +
+              ( parseInt(current_user_stats.level, 10) + 1 ) +
               ': ' +
-              (parseInt(current_user_data.inventory_item_data.player_stats.next_level_xp, 10) - current_user_data.inventory_item_data.player_stats.experience) +
+              (parseInt(current_user_stats.next_level_xp, 10) - current_user_stats.experience) +
               '<br>Pokemon Encountered: ' +
-              current_user_data.inventory_item_data.player_stats.pokemons_encountered +
+              current_user_stats.pokemons_encountered +
               '<br>Pokeballs Thrown: ' +
-              current_user_data.inventory_item_data.player_stats.pokeballs_thrown +
+              current_user_stats.pokeballs_thrown +
               '<br>Pokemon Caught: ' +
-              current_user_data.inventory_item_data.player_stats.pokemons_captured +
+              current_user_stats.pokemons_captured +
               '<br>Small Ratata Caught: ' +
-              current_user_data.inventory_item_data.player_stats.small_rattata_caught +
+              current_user_stats.small_rattata_caught +
               '<br>Pokemon Evolved: ' +
-              current_user_data.inventory_item_data.player_stats.evolutions +
+              current_user_stats.evolutions +
               '<br>Eggs Hatched: ' +
-              current_user_data.inventory_item_data.player_stats.eggs_hatched +
+              current_user_stats.eggs_hatched +
               '<br>Unique Pokedex Entries: ' +
-              current_user_data.inventory_item_data.player_stats.unique_pokedex_entries +
+              current_user_stats.unique_pokedex_entries +
               '<br>PokeStops Visited: ' +
-              current_user_data.inventory_item_data.player_stats.poke_stop_visits +
+              current_user_stats.poke_stop_visits +
               '<br>Kilometers Walked: ' +
-              parseFloat(current_user_data.inventory_item_data.player_stats.km_walked).toFixed(2) +
+              parseFloat(current_user_stats.km_walked).toFixed(2) +
               '</div></div>';
     
     document.getElementById('subcontent').innerHTML = out;
   }
   if (menu == 2) {
-    document.getElementById('subtitle').innerHTML = user_data[users[user_id]].bagItems.length+" items in Bag";
+    var current_user_bag_items = user_data[users[user_id]].bagItems;
+    document.getElementById('subtitle').innerHTML = current_user_bag_items.length+" items in Bag";
     out = '<div class="row items">';
-    for (i = 0; i < user_data[users[user_id]].bagItems.length; i++) {
+    for (i = 0; i < current_user_bag_items.length; i++) {
       out += '<div class="col s12 m4 l3 center" style="float: left"><img src="image/items/' +
-              user_data[users[user_id]].bagItems[i].inventory_item_data.item.item_id +
+              current_user_bag_items[i].inventory_item_data.item.item_id +
               '.png" class="item_img"><br><b>' +
-              itemsArray[user_data[users[user_id]].bagItems[i].inventory_item_data.item.item_id] +
+              itemsArray[current_user_bag_items[i].inventory_item_data.item.item_id] +
               '</b><br>Count: ' +
-              user_data[users[user_id]].bagItems[i].inventory_item_data.item.count +
+              current_user_bag_items[i].inventory_item_data.item.count +
               '</div>';
     }
     out += '</div>';
@@ -421,16 +422,17 @@ function buildMenu(user_id, menu) {
     out = '<div class="row items">';
     user_data[users[user_id]].bagPokemon.sort(function(a, b){return b.inventory_item_data.pokemon_data.cp - a.inventory_item_data.pokemon_data.cp});
     for (i = 0; i < user_data[users[user_id]].bagPokemon.length; i++) {
-      if (user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.is_egg) {
+      var current_pokemon_data = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data;
+      if (current_pokemon_data.is_egg) {
         continue;
       } else {
-        pkmnNum = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.pokemon_id;
-        pkmnImage = pad_with_zeroes(user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.pokemon_id, 3) + '.png';
+        pkmnNum = current_pokemon_data.pokemon_id;
+        pkmnImage = pad_with_zeroes(current_pokemon_data.pokemon_id, 3) + '.png';
         pkmnName = pokemonArray[pkmnNum-1].Name;
-        pkmnCP = "CP "+user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.cp;
-        pkmnIVA = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.individual_attack || 0;
-        pkmnIVD = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.individual_defense || 0;
-        pkmnIVS = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.individual_stamina || 0;
+        pkmnCP = "CP "+current_pokemon_data.cp;
+        pkmnIVA = current_pokemon_data.individual_attack || 0;
+        pkmnIVD = current_pokemon_data.individual_defense || 0;
+        pkmnIVS = current_pokemon_data.individual_stamina || 0;
         pkmnIV = ((pkmnIVA + pkmnIVD + pkmnIVS) / 45.0).toFixed(2);
       }
       out += '<div class="col s12 m4 l3 center" style="float: left;"><img src="image/pokemon/' + pkmnImage + '" class="png_img"><br><b>' + pkmnName +
@@ -445,8 +447,9 @@ function buildMenu(user_id, menu) {
     
     out = '<div class="row items">';
     for (i = 0; i < user_data[users[user_id]].pokedex.length; i++) {
-      pkmnNum = user_data[users[user_id]].pokedex[i].inventory_item_data.pokedex_entry.pokedex_entry_number;
-      pkmnImage = pad_with_zeroes(user_data[users[user_id]].pokedex[i].inventory_item_data.pokedex_entry.pokedex_entry_number, 3) +'.png';
+      var current_pokedex = user_data[users[user_id]].pokedex[i].inventory_item_data.pokedex_entry;
+      pkmnNum = current_pokedex.pokedex_entry_number;
+      pkmnImage = pad_with_zeroes(current_pokedex.pokedex_entry_number, 3) +'.png';
       pkmnName = pokemonArray[pkmnNum-1].Name;
       out += '<div class="col m6 s12"><img src="image/pokemon/' +
               pkmnImage +
@@ -455,9 +458,9 @@ function buildMenu(user_id, menu) {
               '</b><br>Number: ' +
               pkmnNum +
               '<br>Times Encountered: ' +
-              user_data[users[user_id]].pokedex[i].inventory_item_data.pokedex_entry.times_encountered + 
+              current_pokedex.times_encountered + 
               '<br>Times Caught: ' +
-              user_data[users[user_id]].pokedex[i].inventory_item_data.pokedex_entry.times_captured +
+              current_pokedex.times_captured +
               '</div>';
     }
     out += '</div>';
