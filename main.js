@@ -66,6 +66,16 @@ var itemsArray = {
   '1002': 'Item Storage Upgrade'
 };
 
+$(document).ready(function() {
+  loadScript("https://maps.googleapis.com/maps/api/js?key=" + gMapsAPIKey + "&libraries=drawing&callback=initMap");
+});
+
+function loadScript(src) {
+  var element = document.createElement("script");
+  element.src = src;
+  document.body.appendChild(element);
+}
+
 function initMap() {
   loadJSON('pokemondata.json', function(data, successData) {
     console.log('Loaded pokemon data..');
@@ -396,7 +406,7 @@ function buildMenu() {
     document.getElementById('subtitle').innerHTML = "Items in Bag";
     out = '<div class="row items"><div class="col s12"><h5>' + users[0] + '</h5>';
     for (i = 0; i < bagItems.length; i++) {
-      out += '<table><tr><td><img src="/image/items/' +
+      out += '<table><tr><td><img src="image/items/' +
               bagItems[i].inventory_item_data.item.item_id +
               '.png" class="item_img"></td><td>Item: ' +
               itemsArray[bagItems[i].inventory_item_data.item.pokemon_id] +
@@ -425,7 +435,7 @@ function buildMenu() {
         pkmnImage = pad_with_zeroes(bagPokemon[i].inventory_item_data.pokemon_data.pokemon_id, 3) + '.png';
         pkmnName = pokemonArray[pkmnNum-1].Name;
       }
-      out += '<tr><td><img src="/image/pokemon/' + pkmnImage + '" class="png_img"></td><td class="left-align">Name: ' + pkmnName +
+      out += '<tr><td><img src="image/pokemon/' + pkmnImage + '" class="png_img"></td><td class="left-align">Name: ' + pkmnName +
       '<br>Number: ' + pkmnNum + '</td></tr>';
     }
     out += '</table></div></div>';
@@ -439,7 +449,7 @@ function buildMenu() {
       pkmnNum = pokedex[i].inventory_item_data.pokedex_entry.pokedex_entry_number;
       pkmnImage = pad_with_zeroes(pokedex[i].inventory_item_data.pokedex_entry.pokedex_entry_number, 3) +'.png';
       pkmnName = pokemonArray[pkmnNum-1].Name;
-      out += '<tr><td><img src="/image/pokemon/' +
+      out += '<tr><td><img src="image/pokemon/' +
               pkmnImage +
               '" class="png_img"></td><td class="left-align">Name: ' +
               pkmnName +
