@@ -23,6 +23,13 @@ html, body {
 	z-index: 6;
 	display: none;
 }
+#sortButtons {
+	float: right;
+	margin: 9px 10px 0 0;
+}
+#sortButtons .chip {
+	margin-right: 3px;
+}
 #close {
 	float: right;
 	font-size: 32px;
