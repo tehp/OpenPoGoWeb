@@ -88,9 +88,10 @@ function initMap() {
     center: {lat: 50.0830986, lng: 6.7613762},
     zoom: 8
   });
+
   document.getElementById('switchPan').checked = userFollow;
   document.getElementById('switchZoom').checked = userZoom;
-  document.getElementById('imageType').checked = false;
+  document.getElementById('imageType').checked = (imageExt != '.png');
   setTimeout(function(){
     placeTrainer();
     addCatchable();
@@ -126,6 +127,14 @@ $('#imageType').change(function(){
     } else {
       imageExt = '.png';
     }
+});
+
+$('#optionsButton').click(function(){
+    $('#optionsList').toggle();
+});
+
+$('#trainerButton').click(function(){
+    $('#trainerList').toggle();
 });
 
 $('#tInfo').click(function(){
