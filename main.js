@@ -432,6 +432,9 @@ function buildMenu(user_id, menu) {
   $("#submenu").show();
   if (menu == 1) {
     document.getElementById('subtitle').innerHTML = 'Trainer Info';
+
+    document.getElementById('sortButtons').innerHTML = "";
+
     out = '';
     var current_user_stats = user_data[users[user_id]].stats[0].inventory_item_data.player_stats;
       out += '<div class="row"><div class="col s12"><h5>' +
@@ -469,6 +472,9 @@ function buildMenu(user_id, menu) {
   if (menu == 2) {
     var current_user_bag_items = user_data[users[user_id]].bagItems;
     document.getElementById('subtitle').innerHTML = current_user_bag_items.length+" items in Bag";
+
+    document.getElementById('sortButtons').innerHTML = "";
+
     out = '<div class="row items">';
     for (i = 0; i < current_user_bag_items.length; i++) {
       out += '<div class="col s12 m4 l3 center" style="float: left"><img src="image/items/' +
@@ -485,31 +491,23 @@ function buildMenu(user_id, menu) {
   if (menu == 3) {
     pkmnTotal = user_data[users[user_id]].bagPokemon.length;
     document.getElementById('subtitle').innerHTML = pkmnTotal+" Pokemons";
-    out = '<div class="row items">';
-    user_data[users[user_id]].bagPokemon.sort(function(a, b){return b.inventory_item_data.pokemon_data.cp - a.inventory_item_data.pokemon_data.cp;});
-    for (i = 0; i < user_data[users[user_id]].bagPokemon.length; i++) {
-      var current_pokemon_data = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data;
-      if (current_pokemon_data.is_egg) {
-        continue;
-      } else {
-        pkmnNum = current_pokemon_data.pokemon_id;
-        pkmnImage = pad_with_zeroes(current_pokemon_data.pokemon_id, 3) + '.png';
-        pkmnName = pokemonArray[pkmnNum-1].Name;
-        pkmnCP = "CP "+current_pokemon_data.cp;
-        pkmnIVA = current_pokemon_data.individual_attack || 0;
-        pkmnIVD = current_pokemon_data.individual_defense || 0;
-        pkmnIVS = current_pokemon_data.individual_stamina || 0;
-        pkmnIV = ((pkmnIVA + pkmnIVD + pkmnIVS) / 45.0).toFixed(2);
-      }
-      out += '<div class="col s12 m4 l3 center" style="float: left;"><img src="image/pokemon/' + pkmnImage + '" class="png_img"><br><b>' + pkmnName +
-      '</b><br>' + pkmnCP + '<br>IV '+pkmnIV+'</div>';
-    }
-    out += '</div>';
-    document.getElementById('subcontent').innerHTML = out;
+
+    sortButtons = '<div style="float: right">Sort : ';
+    sortButtons += '<div class="chip"><a href="javascript:sortAndShowBagPokemon(\'cp\',' + user_id + ')">CP</a></div>';
+    sortButtons += '<div class="chip"><a href="javascript:sortAndShowBagPokemon(\'iv\',' + user_id + ')">IV</a></div>';
+    sortButtons += '<div class="chip"><a href="javascript:sortAndShowBagPokemon(\'name\',' + user_id + ')">Name</a></div>';
+    sortButtons += '<div class="chip"><a href="javascript:sortAndShowBagPokemon(\'id\',' + user_id + ')">ID</a></div>';
+    sortButtons += '</div>';
+
+    document.getElementById('sortButtons').innerHTML = sortButtons;
+
+    sortAndShowBagPokemon('cp', user_id);
   }
   if (menu == 4) {
     pkmnTotal = user_data[users[user_id]].pokedex.length;
     document.getElementById('subtitle').innerHTML = "Pokedex "+ pkmnTotal + ' / 151';
+
+    document.getElementById('sortButtons').innerHTML = "";
     
     out = '<div class="row items">';
     for (i = 0; i < user_data[users[user_id]].pokedex.length; i++) {
@@ -532,4 +530,93 @@ function buildMenu(user_id, menu) {
     out += '</div>';
     document.getElementById('subcontent').innerHTML = out;
   }
+}
+
+function sortAndShowBagPokemon(sortOn, user_id) {
+
+  user_id = user_id || 0;
+
+  if(!user_data[users[user_id]].bagPokemon.length) return;
+
+  sortOn = sortOn || 'cp';
+
+  var sortedPokemon = [];
+
+  var eggs = 0;
+
+  out = '<div class="row items">';
+
+  for (var i = 0; i <  user_data[users[user_id]].bagPokemon.length; i++) {
+
+    if( user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.is_egg) {
+      eggs++;
+      continue;
+    }
+
+    pkmID =  user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.pokemon_id;
+
+    pkmnName = pokemonArray[pkmID-1].Name;
+
+    pkmCP =  user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.cp;
+
+    pkmIVA = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.individual_attack || 0;
+    pkmIVD = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.individual_defense || 0;
+    pkmIVS = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.individual_stamina || 0;
+    pkmIV = ((pkmIVA + pkmIVD + pkmIVS) / 45.0).toFixed(2);
+
+    sortedPokemon.push({
+      "name": pkmnName,
+      "id":pkmID,
+      "cp": pkmCP,
+      "iv": pkmIV
+    });
+  }
+
+  switch(sortOn) {
+    case 'name':
+      sortedPokemon.sort(function(a, b){
+        if(a.name < b.name) return -1;
+        if(a.name > b.name) return 1;
+        return 0;
+      });
+      break;
+    case 'id':
+      sortedPokemon.sort(function(a, b){
+        return a.id - b.id
+      });
+      break;
+    case 'cp':
+      sortedPokemon.sort(function(a, b){
+        if (a.cp > b.cp) return -1
+        if(a.cp < b.cp) return 1
+        return 0
+      });
+      break;
+    case 'iv':
+      sortedPokemon.sort(function(a, b){
+        if (a.iv > b.iv) return -1
+        if(a.iv < b.iv) return 1
+        return 0
+      });
+      break;
+  }
+
+  for (var i = 0; i < sortedPokemon.length; i++) {
+
+    pkmnNum = sortedPokemon[i].id;
+    pkmnImage = pad_with_zeroes(pkmnNum, 3) + '.png';
+    pkmnName = pokemonArray[pkmnNum-1].Name;
+    pkmnCP = sortedPokemon[i].cp;
+    pkmnIV = sortedPokemon[i].iv;
+
+    out += '<div class="col s12 m4 l3 center" style="float: left;"><img src="image/pokemon/' + pkmnImage + '" class="png_img"><br><b>' + pkmnName +
+        '</b><br>' + pkmnCP + '<br>IV '+pkmnIV+'</div>';
+  }
+
+  // Add number of eggs
+  out += '<div class="col s12 m4 l3 center" style="float: left;"><img src="image/pokemon/Egg.png" class="png_img"><br><b>You have ' + eggs + ' eggs</div>';
+
+  out += '</div>';
+
+  document.getElementById('subcontent').innerHTML = out;
 }
