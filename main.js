@@ -1,5 +1,9 @@
 var i;
 var map;
+var openFlag1 = false;
+var openFlag2 = false;
+var openFlag3 = false;
+var openFlag4 = false;
 var out1;
 var out;
 var user_index;
@@ -323,23 +327,85 @@ $(document).ready(function(){
 // Bots list and menus
 
 $(document).on('click','.tInfo',function(){
+  if (!openFlag1) {
     buildMenu($(this).closest("ul").attr("user_id"),1);
+    openFlag1 = true;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  } else {
+    $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  }
 });
 
 $(document).on('click','.tItems',function(){
+  if (!openFlag2) {
     buildMenu($(this).closest("ul").attr("user_id"),2);
+    openFlag2 = true;
+    openFlag1 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  } else {
+    $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  }
 });
 
 $(document).on('click','.tPokemon',function(){
+  if (!openFlag3) {
     buildMenu($(this).closest("ul").attr("user_id"),3);
+    openFlag3 = true;
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag4 = false;
+  } else {
+    $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  }
 });
 
 $(document).on('click','.tPokedex',function(){
+  if (!openFlag4) {
     buildMenu($(this).closest("ul").attr("user_id"),4);
+    openFlag4 = true;
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+  } else {
+    $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  }
 });
 
 $(document).on('click','#close',function(){
   $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+});
+
+$(document).on('click','.bot-name',function(){
+  if (openFlag1 || openFlag2 || openFlag3 || openFlag4) {
+    $('#submenu').toggle();
+    openFlag1 = false;
+    openFlag2 = false;
+    openFlag3 = false;
+    openFlag4 = false;
+  }
 });
 
 function buildTrainerList() {
@@ -347,8 +413,8 @@ function buildTrainerList() {
               <li><div class="collapsible-title"><i class="material-icons">people</i>Bots</div></li>';
   for(var i = 0; i < users.length; i++)
   {
-    out += '<li><div class="collapsible-header">'+users[i]
-           +'</div><div class="collapsible-body"><ul user_id="'+i+'">\
+    out += '<li><div class="collapsible-header bot-name">'+users[i]+
+           '</div><div class="collapsible-body"><ul user_id="'+i+'">\
            <li><a class="indigo waves-effect waves-light btn tInfo">Info</a></li><br>\
            <li><a class="indigo waves-effect waves-light btn tItems">Items</a></li><br>\
            <li><a class="indigo waves-effect waves-light btn tPokemon">Pokemon</a></li><br>\
