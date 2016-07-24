@@ -39,3 +39,18 @@ html, body {
 	width: 96px;
 	height: auto;
 }
+.png_img_small {
+	width: 50px;
+	height: auto;
+}
+.navButton {
+	position: relative;
+	top: -30px;
+	right: -30px;
+}
+#optionsList {
+	display: none;
+}
+#trainerList {
+	display: none;
+}
