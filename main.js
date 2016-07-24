@@ -486,7 +486,7 @@ function buildMenu(user_id, menu) {
     pkmnTotal = user_data[users[user_id]].bagPokemon.length;
     document.getElementById('subtitle').innerHTML = pkmnTotal+" Pokemons";
     out = '<div class="row items">';
-    user_data[users[user_id]].bagPokemon.sort(function(a, b){return b.inventory_item_data.pokemon_data.cp - a.inventory_item_data.pokemon_data.cp});
+    user_data[users[user_id]].bagPokemon.sort(function(a, b){return b.inventory_item_data.pokemon_data.cp - a.inventory_item_data.pokemon_data.cp;});
     for (i = 0; i < user_data[users[user_id]].bagPokemon.length; i++) {
       var current_pokemon_data = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data;
       if (current_pokemon_data.is_egg) {
@@ -526,7 +526,7 @@ function buildMenu(user_id, menu) {
               '<br>Times Encountered: ' +
               current_pokedex.times_encountered + 
               '<br>Times Caught: ' +
-              current_pokedex.times_captured +
+              (current_pokedex.times_captured || 0) +
               '</div>';
     }
     out += '</div>';
