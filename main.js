@@ -448,23 +448,23 @@ function buildMenu(user_id, menu) {
               ': ' +
               (parseInt(current_user_stats.next_level_xp, 10) - current_user_stats.experience) +
               '<br>Pokemon Encountered: ' +
-              current_user_stats.pokemons_encountered +
+              (current_user_stats.pokemons_encountered || 0) +
               '<br>Pokeballs Thrown: ' +
-              current_user_stats.pokeballs_thrown +
+              (current_user_stats.pokeballs_thrown || 0) +
               '<br>Pokemon Caught: ' +
-              current_user_stats.pokemons_captured +
+              (current_user_stats.pokemons_captured || 0) +
               '<br>Small Ratata Caught: ' +
-              current_user_stats.small_rattata_caught +
+              (current_user_stats.small_rattata_caught || 0) +
               '<br>Pokemon Evolved: ' +
-              current_user_stats.evolutions +
+              (current_user_stats.evolutions || 0) +
               '<br>Eggs Hatched: ' +
-              current_user_stats.eggs_hatched +
+              (current_user_stats.eggs_hatched || 0) +
               '<br>Unique Pokedex Entries: ' +
-              current_user_stats.unique_pokedex_entries +
+              (current_user_stats.unique_pokedex_entries || 0) +
               '<br>PokeStops Visited: ' +
-              current_user_stats.poke_stop_visits +
+              (current_user_stats.poke_stop_visits || 0) +
               '<br>Kilometers Walked: ' +
-              parseFloat(current_user_stats.km_walked).toFixed(2) +
+              (parseFloat(current_user_stats.km_walked).toFixed(2) || 0) +
               '</div></div>';
     
     document.getElementById('subcontent').innerHTML = out;
@@ -482,7 +482,7 @@ function buildMenu(user_id, menu) {
               '.png" class="item_img"><br><b>' +
               itemsArray[current_user_bag_items[i].inventory_item_data.item.item_id] +
               '</b><br>Count: ' +
-              current_user_bag_items[i].inventory_item_data.item.count +
+              (current_user_bag_items[i].inventory_item_data.item.count || 0) +
               '</div>';
     }
     out += '</div>';
