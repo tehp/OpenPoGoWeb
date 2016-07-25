@@ -58,6 +58,22 @@
                   </div>
                   <br>
                 </li>
+                <li>
+                  Bot Path
+                  <div class="switch">
+                    <label>
+                      Off
+                      <input type="checkbox" id="strokeOn">
+                      <span class="lever"></span>
+                      On
+                    </label>
+                  </div>
+                  <br>
+                </li>
+                <li>
+                  Logs
+                  <a class="indigo waves-effect waves-light btn" id="logs-button">Logs</a>
+                </li>
               </ul>
             </div>
           </li>
@@ -74,11 +90,19 @@
             <div class="card-content black-text">
               <span class="card-title" id="subtitle">Submenu</span>
               <span id="close">×</span>
-              <span id="sortButtons"></span>
+              <div class="row" id="sortButtons"></div>
               <div id="subcontent"></div>
             </div>
           </div>
         </div>
+    </div>
+
+    <div id="logs-panel">
+      <div class="card white">
+        <div class="card-content black-text">
+          <b>Logs</b>
+        </div>
+      </div>
     </div>
 
     <div id="map"></div>

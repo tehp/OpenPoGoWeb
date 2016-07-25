@@ -34,8 +34,10 @@ var inventory = {};
 var playerInfo = {};
 var pokedex = {};
 var pokemonArray = {};
+var pokemoncandyArray = {};
 var stats = {};
 var user_data = {};
+var pathcoords = {};
 var itemsArray = {
   '0': 'Unknown',
   '1': 'Pokeball',
@@ -80,12 +82,16 @@ function loadScript(src) {
 }
 
 function initMap() {
+  log({message:'Loading Data..'});
   loadJSON('pokemondata.json', function(data, successData) {
-    console.log('Loaded pokemon data..');
     pokemonArray = data;
   }, errorFunc, 'pokemonData');
+  loadJSON('pokemoncandy.json', function(data, successData) {
+    pokemoncandyArray = data;
+  }, errorFunc, 'pokemonCandy');
   for (var i = 0; i < users.length; i++) {
     user_data[users[i]] = {};
+    pathcoords[users[i]] = [];
   }
   map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: 50.0830986, lng: 6.7613762},
@@ -95,8 +101,10 @@ function initMap() {
   document.getElementById('switchPan').checked = userFollow;
   document.getElementById('switchZoom').checked = userZoom;
   document.getElementById('imageType').checked = (imageExt != '.png');
+  document.getElementById('strokeOn').checked = false;
   placeTrainer();
   addCatchable();
+  log({message:'Data Loaded!'});
   setInterval(updateTrainer, 1000);
   setInterval(addCatchable, 1000);
 }
@@ -125,8 +133,18 @@ $('#imageType').change(function(){
     }
 });
 
+$('#strokeOn').change(function(){
+    for (var i = 0; i < users.length; i++) {
+        user_data[users[i]].trainerPath.setOptions({strokeOpacity: this.checked ? 1.0 : 0.0})
+    }
+});
+
 $('#optionsButton').click(function(){
     $('#optionsList').toggle();
+});
+
+$('#logs-button').click(function(){
+  $('#logs-panel').toggle();
 });
 
 var errorFunc = function(xhr) {
@@ -164,7 +182,7 @@ var trainerFunc = function(data, user_index) {
                 lat: parseFloat(fort.latitude),
                 lng: parseFloat(fort.longitude)
               },
-              icon: 'image/forts/' + teams[fort.owned_by_team] + '.png'
+              icon: 'image/forts/' + teams[(fort.owned_by_team || 0)] + '.png'
             });
           }
           fortPoints = '';
@@ -175,7 +193,7 @@ var trainerFunc = function(data, user_index) {
             fortPoints = 'Points: ' + fort.gym_points;
             fortTeam = 'Team: ' + teams[fort.owned_by_team] + '<br>';
             fortType = 'Gym';
-            pokemonGuard = 'Guard Pokemon: ' + pokemonArray[fort.guard_pokemon_id-1].Name + '<br>';
+            pokemonGuard = 'Guard Pokemon: ' + (pokemonArray[fort.guard_pokemon_id-1].Name || "None") + '<br>';
           }
           var contentString = 'Id: ' + fort.id + '<br>Type: ' + fortType + '<br>' + pokemonGuard + fortPoints;
           info_windows[fort.id] = new google.maps.InfoWindow({
@@ -191,10 +209,18 @@ var trainerFunc = function(data, user_index) {
       }
     }
   }
+  if (pathcoords[users[user_index]][pathcoords[users[user_index]].length] > 1) {
+    var tempcoords = [{lat: parseFloat(data.lat), lng: parseFloat(data.lng)}];
+    if (tempcoords.lat != pathcoords[users[user_index]][pathcoords[users[user_index]].length-1].lat && tempcoords.lng != pathcoords[users[user_index]][pathcoords[users[user_index]].length-1].lng || pathcoords[users[user_index]].length === 1) {
+      pathcoords[users[user_index]].push({lat: parseFloat(data.lat), lng: parseFloat(data.lng)})
+    }
+  } else {
+    pathcoords[users[user_index]].push({lat: parseFloat(data.lat), lng: parseFloat(data.lng)})
+  }  
   if (user_data[users[user_index]].hasOwnProperty('marker') === false) {
     buildTrainerList();
     addInventory();
-    Materialize.toast('New Marker: Trainer - ' + users[user_index], 3000);
+    log({message: "Trainer loaded: " +users[user_index], color: "blue-text"});
     randomSex = Math.floor(Math.random() * 1);
     user_data[users[user_index]].marker = new google.maps.Marker({
       map: map,
@@ -205,6 +231,18 @@ var trainerFunc = function(data, user_index) {
     });
   } else {
     user_data[users[user_index]].marker.setPosition({lat: parseFloat(data.lat), lng: parseFloat(data.lng)});
+    if (pathcoords[users[user_index]].length === 2) {
+      user_data[users[user_index]].trainerPath = new google.maps.Polyline({
+        map: map,
+        path: pathcoords[users[user_index]],
+        geodisc: true,
+        strokeColor: '#FF0000',
+        strokeOpacity: 0.0,
+        strokeWeight: 2
+      });
+    } else {
+      user_data[users[user_index]].trainerPath.setPath(pathcoords[users[user_index]]);
+    }
   }
   if (users.length === 1 && userZoom === true) {
     map.setZoom(16);
@@ -236,7 +274,7 @@ var catchSuccess = function(data, user_index) {
     if (data.latitude !== undefined) {
       if (user_data[users[user_index]].catchables.hasOwnProperty(data.spawnpoint_id) === false) {
         poke_name = pokemonArray[data.pokemon_id-1].Name;
-        Materialize.toast(poke_name + ' appeared near trainer: ' + users[user_index], 3000);
+        log({message: poke_name+" appeared near trainder: " +users[user_index], color: "green-text"});
         user_data[users[user_index]].catchables[data.spawnpoint_id] = new google.maps.Marker({
           map: map,
           position: {lat: parseFloat(data.latitude), lng: parseFloat(data.longitude)},
@@ -263,7 +301,7 @@ var catchSuccess = function(data, user_index) {
     }
   } else {
     if (user_data[users[user_index]].catchables !== undefined && Object.keys(user_data[users[user_index]].catchables).length > 0) {
-      Materialize.toast('The Pokemon has been caught or fled '  + users[user_index], 3000);
+      log({message: "The Pokemon has been caught or fled " +users[user_index]});
       for (var key in user_data[users[user_index]].catchables) {
         user_data[users[user_index]].catchables[key].setMap(null);
       }
@@ -271,6 +309,15 @@ var catchSuccess = function(data, user_index) {
     }
   }
 };
+
+function findBot(user_index) {
+  map.setZoom(16);
+  map.panTo({
+    lat: parseFloat(pathcoords[users[user_index]][pathcoords[users[user_index]].length-1].lat),
+    lng: parseFloat(pathcoords[users[user_index]][pathcoords[users[user_index]].length-1].lng)
+  });
+
+}
 
 function addCatchable() {
   for (var i = 0; i < users.length; i++) {
@@ -418,7 +465,8 @@ function buildTrainerList() {
            <li><a class="indigo waves-effect waves-light btn tInfo">Info</a></li><br>\
            <li><a class="indigo waves-effect waves-light btn tItems">Items</a></li><br>\
            <li><a class="indigo waves-effect waves-light btn tPokemon">Pokemon</a></li><br>\
-           <li><a class="indigo waves-effect waves-light btn tPokedex">Pokedex</a></li>\
+           <li><a class="indigo waves-effect waves-light btn tPokedex">Pokedex</a></li><br>\
+           <li><a class="indigo waves-effect waves-light btn tFind" onClick="findBot('+i+')">Find</a></li>\
            </ul> \
            </div>\
            </li>';
@@ -490,13 +538,14 @@ function buildMenu(user_id, menu) {
   }
   if (menu == 3) {
     pkmnTotal = user_data[users[user_id]].bagPokemon.length;
-    document.getElementById('subtitle').innerHTML = pkmnTotal+" Pokemons";
+    document.getElementById('subtitle').innerHTML = pkmnTotal+" Pokemon";
 
-    sortButtons = '<div style="float: right">Sort : ';
+    sortButtons = '<div class="col s12">Sort : ';
     sortButtons += '<div class="chip"><a href="javascript:sortAndShowBagPokemon(\'cp\',' + user_id + ')">CP</a></div>';
     sortButtons += '<div class="chip"><a href="javascript:sortAndShowBagPokemon(\'iv\',' + user_id + ')">IV</a></div>';
     sortButtons += '<div class="chip"><a href="javascript:sortAndShowBagPokemon(\'name\',' + user_id + ')">Name</a></div>';
     sortButtons += '<div class="chip"><a href="javascript:sortAndShowBagPokemon(\'id\',' + user_id + ')">ID</a></div>';
+    sortButtons += '<div class="chip"><a href="javascript:sortAndShowBagPokemon(\'time\',' + user_id + ')">Time</a></div>';
     sortButtons += '</div>';
 
     document.getElementById('sortButtons').innerHTML = sortButtons;
@@ -507,63 +556,47 @@ function buildMenu(user_id, menu) {
     pkmnTotal = user_data[users[user_id]].pokedex.length;
     document.getElementById('subtitle').innerHTML = "Pokedex "+ pkmnTotal + ' / 151';
 
-    document.getElementById('sortButtons').innerHTML = "";
-    
-    out = '<div class="row items">';
-    for (i = 0; i < user_data[users[user_id]].pokedex.length; i++) {
-      var current_pokedex = user_data[users[user_id]].pokedex[i].inventory_item_data.pokedex_entry;
-      pkmnNum = current_pokedex.pokedex_entry_number;
-      pkmnImage = pad_with_zeroes(current_pokedex.pokedex_entry_number, 3) +'.png';
-      pkmnName = pokemonArray[pkmnNum-1].Name;
-      out += '<div class="col m6 s12"><img src="image/pokemon/' +
-              pkmnImage +
-              '" class="png_img"><br><b> ' +
-              pkmnName +
-              '</b><br>Number: ' +
-              pkmnNum +
-              '<br>Times Encountered: ' +
-              current_pokedex.times_encountered + 
-              '<br>Times Caught: ' +
-              (current_pokedex.times_captured || 0) +
-              '</div>';
+    sortButtons = '<div class="col s12">Sort : ';
+    sortButtons += '<div class="chip"><a href="javascript:sortAndShowPokedex(\'id\',' + user_id + ')">ID</a></div>';
+    sortButtons += '<div class="chip"><a href="javascript:sortAndShowPokedex(\'name\',' + user_id + ')">Name</a></div>';
+    sortButtons += '<div class="chip"><a href="javascript:sortAndShowPokedex(\'enc\',' + user_id + ')">Seen</a></div>';
+    sortButtons += '<div class="chip"><a href="javascript:sortAndShowPokedex(\'cap\',' + user_id + ')">Caught</a></div>';
+    sortButtons += '</div>';
+
+    document.getElementById('sortButtons').innerHTML = sortButtons;
+
+    sortAndShowPokedex('id', user_id);
+  }
+}
+
+function getCandy(p_num, user_id) {
+  for (var i = 0; i <  user_data[users[user_id]].bagCandy.length; i++) {
+    checkCandy = user_data[users[user_id]].bagCandy[i].inventory_item_data.pokemon_family.family_id;
+    if (pokemoncandyArray[p_num] === checkCandy) {
+      return (user_data[users[user_id]].bagCandy[i].inventory_item_data.pokemon_family.candy || 0);
     }
-    out += '</div>';
-    document.getElementById('subcontent').innerHTML = out;
   }
 }
 
 function sortAndShowBagPokemon(sortOn, user_id) {
-
   user_id = user_id || 0;
-
   if(!user_data[users[user_id]].bagPokemon.length) return;
-
   sortOn = sortOn || 'cp';
-
   var sortedPokemon = [];
-
   var eggs = 0;
-
   out = '<div class="row items">';
-
-  for (var i = 0; i <  user_data[users[user_id]].bagPokemon.length; i++) {
-
+  for (i = 0; i <  user_data[users[user_id]].bagPokemon.length; i++) {
     if( user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.is_egg) {
       eggs++;
       continue;
     }
-
-    pkmID =  user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.pokemon_id;
-
+    pkmID = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.pokemon_id;
     pkmnName = pokemonArray[pkmID-1].Name;
-
-    pkmCP =  user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.cp;
-
+    pkmCP = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.cp;
     pkmIVA = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.individual_attack || 0;
     pkmIVD = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.individual_defense || 0;
     pkmIVS = user_data[users[user_id]].bagPokemon[i].inventory_item_data.pokemon_data.individual_stamina || 0;
     pkmIV = ((pkmIVA + pkmIVD + pkmIVS) / 45.0).toFixed(2);
-
     sortedPokemon.push({
       "name": pkmnName,
       "id":pkmID,
@@ -571,7 +604,6 @@ function sortAndShowBagPokemon(sortOn, user_id) {
       "iv": pkmIV
     });
   }
-
   switch(sortOn) {
     case 'name':
       sortedPokemon.sort(function(a, b){
@@ -599,24 +631,117 @@ function sortAndShowBagPokemon(sortOn, user_id) {
         return 0
       });
       break;
+      break;
+    case 'time':
+      sortedPokemon.sort(function(a, b){
+        if (a.creation_time_ms > b.creation_time_ms) return -1
+        if(a.creation_time_ms < b.creation_time_ms) return 1
+        return 0
+      });
+      break;
   }
-
-  for (var i = 0; i < sortedPokemon.length; i++) {
-
+  for (i = 0; i < sortedPokemon.length; i++) {
     pkmnNum = sortedPokemon[i].id;
     pkmnImage = pad_with_zeroes(pkmnNum, 3) + '.png';
     pkmnName = pokemonArray[pkmnNum-1].Name;
     pkmnCP = sortedPokemon[i].cp;
     pkmnIV = sortedPokemon[i].iv;
-
-    out += '<div class="col s12 m4 l3 center" style="float: left;"><img src="image/pokemon/' + pkmnImage + '" class="png_img"><br><b>' + pkmnName +
-        '</b><br>' + pkmnCP + '<br>IV '+pkmnIV+'</div>';
+    candyNum = getCandy(pkmnNum, user_id)
+    out += '<div class="col s12 m6 l3 center"><img src="image/pokemon/' +
+            pkmnImage +
+            '" class="png_img"><br><b>' +
+            pkmnName +
+            '</b><br>' +
+            pkmnCP +
+            '<br>IV: ' +
+            pkmnIV +
+            '<br>Candy: ' +
+            candyNum +
+            '</div>';
   }
-
   // Add number of eggs
   out += '<div class="col s12 m4 l3 center" style="float: left;"><img src="image/pokemon/Egg.png" class="png_img"><br><b>You have ' + eggs + ' eggs</div>';
-
   out += '</div>';
-
   document.getElementById('subcontent').innerHTML = out;
+}
+
+function sortAndShowPokedex(sortOn, user_id) {
+  user_id = (user_id || 0);
+  if(!user_data[users[user_id]].pokedex.length) return;
+  sortOn = sortOn || 'id';
+  var sortedPokedex = [];
+  out = '<div class="row items">';
+  for (i = 0; i < user_data[users[user_id]].pokedex.length; i++) {
+    pkmID = user_data[users[user_id]].pokedex[i].inventory_item_data.pokedex_entry.pokedex_entry_number;
+    pkmnName = pokemonArray[pkmID-1].Name;
+    pkmEnc = user_data[users[user_id]].pokedex[i].inventory_item_data.pokedex_entry.times_encountered;
+    pkmCap = user_data[users[user_id]].pokedex[i].inventory_item_data.pokedex_entry.times_captured;
+    sortedPokedex.push({
+      "name": pkmnName,
+      "id": pkmID,
+      "cap": (pkmEnc || 0),
+      "enc": (pkmCap || 0)
+    });
+  }
+  console.log(sortedPokedex)
+  switch(sortOn) {
+    case 'id':
+      sortedPokedex.sort(function(a, b){
+        return a.id - b.id
+      });
+      break;
+    case 'name':
+      sortedPokedex.sort(function(a, b){
+        if(a.name < b.name) return -1;
+        if(a.name > b.name) return 1;
+        return 0;
+      });
+      break;
+    case 'enc':
+      sortedPokedex.sort(function(a, b){
+        return a.enc - b.enc
+      });
+      break;
+    case 'cap':
+      sortedPokedex.sort(function(a, b){
+        return a.cap - b.cap
+      });
+      break;
+  }
+  for (var i = 0; i < sortedPokedex.length; i++) {
+    pkmnNum = sortedPokedex[i].id;
+    pkmnImage = pad_with_zeroes(pkmnNum, 3) +'.png';
+    pkmnName = pokemonArray[pkmnNum-1].Name;
+    pkmnName = pokemonArray[pkmnNum-1].Name;
+    pkmnEnc = sortedPokedex[i].enc
+    pkmnCap = sortedPokedex[i].cap
+    candyNum = getCandy(pkmnNum, user_id)
+    out += '<div class="col s12 m6 l3 center"><img src="image/pokemon/' +
+            pkmnImage +
+            '" class="png_img"><br><b> ' +
+            pad_with_zeroes(pkmnNum, 3) +
+            ' ' +
+            pkmnName +
+            '</b><br>Times Seen: ' +
+            pkmnEnc + 
+            '<br>Times Caught: ' +
+            pkmnCap +
+            '<br>Candy: ' +
+            pkmnCap +
+            '</div>';
+  }
+  out += '</div>';
+  document.getElementById('subcontent').innerHTML = out;
+}
+
+// Adds events to log panel and if it's closed sends Toast
+function log( log_object ){
+  var currentDate = new Date();
+  var time = ('0' + currentDate.getHours()).slice(-2) + ':'
+             + ('0' + (currentDate.getMinutes())).slice(-2);
+  $("#logs-panel .card-content").append("<div class='log-item'>\
+  <span class='log-date'>"+time+"</span><p class='"+log_object.color+"'>"+log_object.message+"</p></div>");
+  if(!$('#logs-panel').is(":visible")){
+    Materialize.toast(log_object.message, 3000);
+  }
 }
