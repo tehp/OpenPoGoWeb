@@ -1,0 +1,255 @@
+html, body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+#map {
+	height: 100%;
+}
+#menu {
+	position: fixed;
+	right: 10px;
+	top: 10px;
+	z-index: 5;
+	height: auto;
+	width: 180px;
+}
+#submenu {
+	position: fixed;
+	left: 50%;
+	top: 10px;
+	transform: translate(-50%, 0);
+	width: 50%;
+	z-index: 6;
+	display: none;
+}
+#sortButtons {
+	text-align: right;
+}
+#sortButtons .chip {
+	margin-right: 3px;
+}
+#close {
+	float: right;
+	font-size: 32px;
+	cursor: pointer;
+	line-height: 48px;
+}
+.items {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	height: 80vh; 
+}
+.item_img {
+	width: 75px;
+	height: auto;
+}
+.gif_img {
+	width: 38px;
+	height: auto;
+}
+.png_img {
+	width: 96px;
+	height: auto;
+}
+.navButton {
+	position: relative;
+	top: -30px;
+	right: -30px;
+}
+.row {
+	margin-bottom: 0;
+}
+.collapsible-body a {
+	width: 100%;
+}
+#toast-container {
+  top: auto !important;
+  right: auto !important;
+  bottom: 10%;
+  left:7%;  
+}
+#bots-list {
+	max-height: 80vh;
+}
+#bots-list::-webkit-scrollbar { 
+	display: none; 
+}
+.collapsible-body {
+	background: #FFF;
+	padding: 1em;
+}
+.card .card-content {
+	padding: 10px 20px 20px 20px;
+}
+.collapsible-title {
+	display: block;
+	min-height: 3rem;
+	line-height: 3rem;
+	padding: 0 1rem;
+	background-color: #fff;
+	border-bottom: 1px solid #ddd;
+}
+
+.collapsible-title i {
+	width: 2rem;
+	font-size: 1.6rem;
+	line-height: 3rem;
+	display: block;
+	float: left;
+	text-align: center;
+	margin-right: 1rem;
+}
+
+.bot-name {
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+}
+#logs-panel {
+	display: none;
+	position: fixed;
+	height: 50vh;
+	width: 360px;
+	z-index: 5;
+	left: 10px;
+	bottom: 10px;
+}
+#logs-panel .card {
+	overflow-y: scroll;
+	height: 100%;
+	margin: 0;
+}
+.log-item {
+	padding: .3em 0 .3em 0;
+	font-size: 14px;
+}
+.log-date {
+	color: #666;
+}
+.bot-0 {
+	background-color: #A93226 !important;
+}
+.bot-0:hover {
+	background-color: #E6B0AA;
+}
+.botbar-0 {
+	background-color: #E6B0AA;
+}
+.bot-1 {
+	background-color: #884EA0 !important;
+}
+.bot-1:hover {
+	background-color: #D7BDE2;
+}
+.botbar-1 {
+	background-color: #D7BDE2;
+}
+.bot-2 {
+	background-color: #2471A3 !important;
+}
+.bot-2:hover {
+	background-color: #A9CCE3;
+}
+.botbar-2 {
+	background-color: #A9CCE3;
+}
+.bot-3 {
+	background-color: #17A589 !important;
+}
+.bot-3:hover {
+	background-color: #A3E4D7;
+}
+.botbar-3 {
+	background-color: #A3E4D7;
+}
+.bot-4 {
+	background-color: #229954 !important;
+}
+.bot-4:hover {
+	background-color: #A9DFBF;
+}
+.botbar-4 {
+	background-color: #A9DFBF;
+}
+.bot-5 {
+	background-color: #D4AC0D !important;
+}
+.bot-5:hover {
+	background-color: #F9E79F;
+}
+.botbar-5 {
+	background-color: #F9E79F;
+}
+.bot-6 {
+	background-color: #CA6F1E !important;
+}
+.bot-6:hover {
+	background-color: #F5CBA7;
+}
+.botbar-6 {
+	background-color: #F5CBA7;
+}
+.bot-7 {
+	background-color: #CB4335 !important;
+}
+.bot-7:hover {
+	background-color: #F5B7B1;
+}
+.botbar-7 {
+	background-color: #F5B7B1;
+}
+.bot-8 {
+	background-color: #7D3C98 !important;
+}
+.bot-8:hover {
+	background-color: #D2B4DE;
+}
+.botbar-8 {
+	background-color: #D2B4DE;
+}
+.bot-9 {
+	background-color: #2E86C1 !important;
+}
+.bot-9:hover {
+	background-color: #AED6F1;
+}
+.botbar-9 {
+	background-color: #AED6F1;
+}
+.bot-10 {
+	background-color: #138D75 !important;
+}
+.bot-10:hover {
+	background-color: #A2D9CE;
+}
+.botbar-10 {
+	background-color: #A2D9CE;
+}
+.bot-11 {
+	background-color: #28B463 !important;
+}
+.bot-11:hover {
+	background-color: #ABEBC6;
+}
+.botbar-11 {
+	background-color: #ABEBC6;
+}
+.bot-12 {
+	background-color: #D68910 !important;
+}
+.bot-12:hover {
+	background-color: #FAD7A0;
+}
+.botbar-12 {
+	background-color: #FAD7A0;
+}
+.bot-13 {
+	background-color: #BA4A00 !important;
+}
+.bot-13:hover {
+	background-color: #EDBB99;
+}
+.botbar-13 {
+	background-color: #EDBB99;
+}
