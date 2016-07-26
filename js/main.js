@@ -2,6 +2,18 @@
 
 $(document).ready(function() {
   mapView.init();
+  var socket = io.connect('http://' + document.domain + ':' + location.port + '/event');
+    socket.on('connect', function() {
+      console.log('connected!');
+    });
+    socket.on('logging', function(msg) {
+      for(var i = 0; i < msg.length; i++) {
+        mapView.log({
+          message: msg[i].output,
+          color: msg[i].color + "-text"
+        });
+      }
+    });
 });
 
 var mapView = {
