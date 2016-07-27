@@ -510,6 +510,9 @@ var mapView = {
         "id": pkmID,
         "cp": pkmCP,
         "iv": pkmIV,
+        "attack": pkmIVA,
+        "defense": pkmIVD,
+        "stamina": pkmIVS,
         "creation_time": pkmTime
       });
     }
@@ -567,6 +570,9 @@ var mapView = {
         pkmnName = self.pokemonArray[pkmnNum - 1].Name,
         pkmnCP = sortedPokemon[i].cp,
         pkmnIV = sortedPokemon[i].iv,
+        pkmnIVA = sortedPokemon[i].attack,
+        pkmnIVD = sortedPokemon[i].defense,
+        pkmnIVS = sortedPokemon[i].stamina,
         candyNum = self.getCandy(pkmnNum, user_id);
 
       out += '<div class="col s12 m6 l3 center"><img src="image/pokemon/' +
@@ -577,6 +583,8 @@ var mapView = {
         pkmnCP +
         '<br>IV: ' +
         pkmnIV +
+        '<br>A/D/S:' +
+        pkmnIVA + '/' + pkmnIVD + '/' + pkmnIVS +
         '<br>Candy: ' +
         candyNum +
         '</div>';
