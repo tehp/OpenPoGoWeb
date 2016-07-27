@@ -242,8 +242,8 @@ var mapView = {
           '</h5><br>Level: ' +
           current_user_stats.level +
           '<br><div class="progress botbar-' + user_id + '" style="height: 10px"> <div class="determinate bot-' + user_id + '" style="width: '+
-          (current_user_stats.experience/
-          current_user_stats.next_level_xp) * 100 +
+          (Number(current_user_stats.experience)/
+          Number(current_user_stats.next_level_xp)) * 100 +
           '%"></div></div>Exp: ' +
           current_user_stats.experience +
           '<br>Exp to Lvl ' +
