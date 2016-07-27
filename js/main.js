@@ -611,8 +611,8 @@ var mapView = {
       sortedPokedex.push({
         "name": pkmnName,
         "id": pkmID,
-        "cap": (pkmEnc || 0),
-        "enc": (pkmCap || 0)
+        "cap": (pkmCap || 0),
+        "enc": (pkmEnc || 0)
       });
     }
     switch (sortOn) {
