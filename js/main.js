@@ -797,20 +797,15 @@ var mapView = {
     }
   },
   loadJSON: function(path, success, error, successData) {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === XMLHttpRequest.DONE) {
-        if (xhr.status === 200) {
-          if (success)
-            success(JSON.parse(xhr.responseText.replace(/\bNaN\b/g, 'null')), successData);
-        } else {
-          if (error)
-            error(xhr);
-        }
+    $.get({
+      url: path + "?" + Date.now()
+    }).done(function(data) {
+      if(data !== undefined) {
+        success(data, successData)
+      } else {
+        error(data)
       }
-    };
-    xhr.open('GET', path, true);
-    xhr.send();
+    })
   },
   // Adds events to log panel and if it's closed sends Toast
   log: function(log_object) {
