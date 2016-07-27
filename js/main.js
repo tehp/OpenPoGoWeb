@@ -2,7 +2,7 @@
 
 $(document).ready(function() {
   mapView.init();
-  var socket = io.connect('http://' + document.domain + ':' + location.port + '/event');
+  var socket = io.connect('http://' + document.domain + ':8000/event');
     socket.on('connect', function() {
       console.log('connected!');
     });
@@ -274,19 +274,27 @@ var mapView = {
         break;
       case 2:
         var current_user_bag_items = self.user_data[self.settings.users[user_id]].bagItems;
-        $('#subtitle').html(current_user_bag_items.length + " item" + (current_user_bag_items.length !== 1 ? "s" : "") + " in Bag");
+        var bagCount = 0;
+
+        for (var i = 0; i < current_user_bag_items.length; i++) {
+          bagCount += (current_user_bag_items[i].inventory_item_data.item.count || 0);
+        }
+
+        $('#subtitle').html(bagCount + " item" + (bagCount !== 1 ? "s" : "") + " in Bag");
 
         $('#sortButtons').html('');
 
         out = '<div class="items"><div class="row">';
         for (var i = 0; i < current_user_bag_items.length; i++) {
-          out += '<div class="col s12 m6 l3 center" style="float: left"><img src="image/items/' +
-            current_user_bag_items[i].inventory_item_data.item.item_id +
-            '.png" class="item_img"><br><b>' +
-            self.itemsArray[current_user_bag_items[i].inventory_item_data.item.item_id] +
-            '</b><br>Count: ' +
-            (current_user_bag_items[i].inventory_item_data.item.count || 0) +
-            '</div>';
+          if ((current_user_bag_items[i].inventory_item_data.item.count || 0) > 0)
+            out += '<div class="col s12 m6 l3 center" style="float: left"><img src="image/items/' +
+              current_user_bag_items[i].inventory_item_data.item.item_id +
+              '.png" class="item_img"><br><b>' +
+              self.itemsArray[current_user_bag_items[i].inventory_item_data.item.item_id] +
+              '</b><br>Count: ' +
+              (current_user_bag_items[i].inventory_item_data.item.count || 0) +
+              '</div>';
+
         }
         out += '</div></div>';
         var nth = 0;
@@ -750,14 +758,15 @@ var mapView = {
         message: "Trainer loaded: " + self.settings.users[user_index],
         color: "blue-text"
       });
-      var randomSex = Math.floor(Math.random() * 1);
+      //var randomSex = Math.floor(Math.random() * 1);
       self.user_data[self.settings.users[user_index]].marker = new google.maps.Marker({
         map: self.map,
         position: {
           lat: parseFloat(data.lat),
           lng: parseFloat(data.lng)
         },
-        icon: 'image/trainer/' + self.trainerSex[randomSex] + Math.floor(Math.random() * self.numTrainers[randomSex]) + '.png',
+        //icon: 'image/trainer/' + self.trainerSex[randomSex] + Math.floor(Math.random() * self.numTrainers[randomSex]) + '.png',
+        icon: 'image/trainer/m79.png',
         zIndex: 2,
         label: self.settings.users[user_index],
         clickable: false
