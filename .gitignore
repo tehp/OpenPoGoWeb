@@ -14,6 +14,7 @@ instance/
 # Other useless files
 .DS_Store
 Thumbs.db
+*.swp
 
 # Generated and config files
 userdata.js
