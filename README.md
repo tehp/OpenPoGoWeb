@@ -3,13 +3,16 @@ Web View for OpenPoGoBot and PokemonGo-Bot
 
 ## Installation and Use
 This project is a module of OpenPogoBot and PokemonGo-Bot.  
-In case the module version has not been updated on those projects, you can run the following to update it:  
+In case the module version has not been updated on those projects, you can run the following to update it:
+
 ```
 $ cd OpenPoGoBot  
 $ git submodule foreach git pull origin master  
 ```  
 
 In the event that there is nothing in your web folder and the above doesn't do anything run the following:  
+
+``` 
 $ cd OpenPoGoBot  
 $ git submodule init  
 $ git submodule update  
