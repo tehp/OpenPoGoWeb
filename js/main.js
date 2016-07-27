@@ -277,7 +277,7 @@ var mapView = {
         var bagCount = 0;
 
         for (var i = 0; i < current_user_bag_items.length; i++) {
-          bagCount += (current_user_bag_items[i].inventory_item_data.item.count || 0);
+          bagCount += (Number(current_user_bag_items[i].inventory_item_data.item.count) || 0);
         }
 
         $('#subtitle').html(bagCount + " item" + (bagCount !== 1 ? "s" : "") + " in Bag");
