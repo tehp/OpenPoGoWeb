@@ -386,7 +386,7 @@ var mapView = {
             clickable: false
           });
           if (self.settings.userZoom === true) {
-            self.map.setZoom(16);
+            self.map.setZoom(self.settings.zoom);
           }
           if (self.settings.userFollow === true) {
             self.map.panTo({
@@ -433,7 +433,7 @@ var mapView = {
     var self = this,
       coords = self.pathcoords[self.settings.users[user_index]][self.pathcoords[self.settings.users[user_index]].length - 1];
 
-    self.map.setZoom(16);
+    self.map.setZoom(self.settings.zoom);
     self.map.panTo({
       lat: parseFloat(coords.lat),
       lng: parseFloat(coords.lng)
@@ -781,7 +781,7 @@ var mapView = {
       }
     }
     if (self.settings.users.length === 1 && self.settings.userZoom === true) {
-      self.map.setZoom(16);
+      self.map.setZoom(self.settings.zoom);
     }
     if (self.settings.users.length === 1 && self.settings.userFollow === true) {
       self.map.panTo({

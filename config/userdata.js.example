@@ -3,6 +3,7 @@
 var userInfo = {
 	users: ["username"],
 	userZoom: true,
+	zoom: 16,
 	userFollow: true,
 	gMapsAPIKey: "YOUR_API_KEY_HERE"
 };
