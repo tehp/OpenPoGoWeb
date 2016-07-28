@@ -805,16 +805,37 @@ var mapView = {
     }
   },
   loadJSON: function(path, success, error, successData) {
-    $.get({
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
+        if (xhr.status === 200) {
+          if (success)
+            success(JSON.parse(xhr.responseText.replace(/\bNaN\b/g, 'null')), successData);
+        } else {
+          if (error)
+            error(xhr);
+        }
+      }
+    };
+    xhr.open('GET', path, true);
+    xhr.send();
+  },
+  
+/*
+  loadJSON: function(path, success, error, successData) {
+    $.getJSON({
       url: path + "?" + Date.now()
     }).done(function(data) {
       if(data !== undefined) {
-        success(data, successData)
+        success(data, successData);
+        console.log(data);
       } else {
-        error(data)
+        error(data);
       }
-    })
+    });
   },
+*/
+  
   // Adds events to log panel and if it's closed sends Toast
   log: function(log_object) {
     var currentDate = new Date();
