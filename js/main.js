@@ -416,7 +416,7 @@ var mapView = {
     } else {
       if (user.catchables !== undefined && Object.keys(user.catchables).length > 0) {
         self.log({
-          message: "[" + self.settings.users[user_index] + "] " + poke_name + " has been caught or fled"
+          message: "[" + self.settings.users[user_index] + "] " + poke_name + " has been caught or fled "
         });
         for (var key in user.catchables) {
           user.catchables[key].setMap(null);
