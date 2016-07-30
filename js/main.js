@@ -476,16 +476,16 @@ var mapView = {
       user = self.user_data[self.settings.users[user_id]];
 
     for (var i = 0; i < user.bagCandy.length; i++) {
-      var checkCandy = user.bagCandy[i].inventory_item_data.pokemon_family.family_id;
+      var checkCandy = user.bagCandy[i].inventory_item_data.candy.family_id;
       if (self.pokemoncandyArray[p_num] === checkCandy) {
-        return (user.bagCandy[i].inventory_item_data.pokemon_family.candy || 0);
+        return (user.bagCandy[i].inventory_item_data.candy.candy || 0);
       }
     }
   },
   invSuccess: function(data, user_index) {
     var self = mapView,
       userData = self.user_data[self.settings.users[user_index]],
-      bagCandy = self.filter(data, 'pokemon_family'),
+      bagCandy = self.filter(data, 'candy'),
       bagItems = self.filter(data, 'item'),
       bagPokemon = self.filter(data, 'pokemon_data'),
       pokedex = self.filter(data, 'pokedex_entry'),
