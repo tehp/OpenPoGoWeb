@@ -38,7 +38,7 @@ html, body {
 .items {
 	overflow-y: scroll;
 	overflow-x: hidden;
-	height: 80vh; 
+	height: 80vh;
 }
 .item_img {
 	width: 75px;
@@ -67,13 +67,13 @@ html, body {
   top: auto !important;
   right: auto !important;
   bottom: 10%;
-  left:7%;  
+  left:7%;
 }
 #bots-list {
 	max-height: 80vh;
 }
-#bots-list::-webkit-scrollbar { 
-	display: none; 
+#bots-list::-webkit-scrollbar {
+	display: none;
 }
 .collapsible-body {
 	background: #FFF;
@@ -252,4 +252,11 @@ html, body {
 }
 .botbar-13 {
 	background-color: #EDBB99;
+}
+
+.pkmn-progress {
+    width: 80%;
+    height: 5px;
+    margin: 0.3rem auto;
+    max-width: 96px;
 }
