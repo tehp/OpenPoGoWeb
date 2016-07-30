@@ -304,8 +304,7 @@ var mapView = {
         break;
       case 2:
         var current_user_bag_items = self.user_data[self.settings.users[user_id]].bagItems;
-        $('#subtitle').html(current_user_bag_items.length + " item" + (current_user_bag_items.length !== 1 ? "s" : "") + " in Bag");
-
+	var total = 0;
         $('#sortButtons').html('');
 
         out = '<div class="items"><div class="row">';
@@ -318,8 +317,10 @@ var mapView = {
                 '</b><br>Count: ' +
                 (current_user_bag_items[i].inventory_item_data.item.count || 0) +
                 '</div>';
+		total = total + (current_user_bag_items[i].inventory_item_data.item.count || 0);
           }
         }
+       	$('#subtitle').html(total + " item" + (total !== 1 ? "s" : "") + " in Bag");
         out += '</div></div>';
         var nth = 0;
         out = out.replace(/<\/div><div/g, function (match, i, original) {
