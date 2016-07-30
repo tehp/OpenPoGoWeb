@@ -629,7 +629,7 @@ var mapView = {
     out = '<div class="items"><div class="row">';
     for (var i = 0; i < user.pokedex.length; i++) {
       var pokedex_entry = user.pokedex[i].inventory_item_data.pokedex_entry,
-        pkmID = pokedex_entry.pokedex_entry_number,
+        pkmID = pokedex_entry.pokemon_id,
         pkmnName = self.pokemonArray[pkmID - 1].Name,
         pkmEnc = pokedex_entry.times_encountered,
         pkmCap = pokedex_entry.times_captured;
