@@ -896,7 +896,7 @@ var mapView = {
         }
       }
     };
-    xhr.open('GET', path, true);
+    xhr.open('GET', path + "?v=" + Date.now(), true);
     xhr.send();
   },
 
