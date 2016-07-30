@@ -367,7 +367,7 @@ var mapView = {
     var self = this,
       users = self.settings.users;
     var out = '<div class="col s12"><ul id="bots-list" class="collapsible" data-collapsible="accordion"> \
-              <li><div class="collapsible-title"><i class="material-icons">people</i>Bots</div></li>';
+              <li class="bots_head"><div class="collapsible-title"><i class="material-icons">people</i>Bots</div></li>';
 
     for (var i = 0; i < users.length; i++) {
       var content = '<li class="bot-user">\
@@ -386,6 +386,21 @@ var mapView = {
     }
     out += "</ul></div>";
     $('#trainers').html(out);
+    var bots_collapsed = 1;
+    $(document).on('click', '.bots_head', function () {
+      var crt_display = 'block';
+      if (bots_collapsed == 0) {
+        bots_collapsed = 1;
+      } else {
+        crt_display = 'none';
+        bots_collapsed = 0;
+      }
+      $(this).parent().find('li').each(function () {
+        if (!$(this).hasClass('bots_head')) {
+          $(this).css('display', crt_display);
+        }
+      });
+    });
     $('.collapsible').collapsible();
   },
   catchSuccess: function(data, user_index) {
