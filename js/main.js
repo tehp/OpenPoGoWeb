@@ -310,13 +310,15 @@ var mapView = {
 
         out = '<div class="items"><div class="row">';
         for (var i = 0; i < current_user_bag_items.length; i++) {
-          out += '<div class="col s12 m6 l3 center" style="float: left"><img src="image/items/' +
-            current_user_bag_items[i].inventory_item_data.item.item_id +
-            '.png" class="item_img"><br><b>' +
-            self.itemsArray[current_user_bag_items[i].inventory_item_data.item.item_id] +
-            '</b><br>Count: ' +
-            (current_user_bag_items[i].inventory_item_data.item.count || 0) +
-            '</div>';
+          if(current_user_bag_items[i].inventory_item_data.item.count > 0) {
+              out += '<div class="col s12 m6 l3 center" style="float: left"><img src="image/items/' +
+                current_user_bag_items[i].inventory_item_data.item.item_id +
+                '.png" class="item_img"><br><b>' +
+                self.itemsArray[current_user_bag_items[i].inventory_item_data.item.item_id] +
+                '</b><br>Count: ' +
+                (current_user_bag_items[i].inventory_item_data.item.count || 0) +
+                '</div>';
+          }
         }
         out += '</div></div>';
         var nth = 0;
