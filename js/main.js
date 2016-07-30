@@ -126,11 +126,19 @@ var mapView = {
       });
     });
   },
+  setBotPathOptions: function(checked) {
+      var self = this;
+      for (var i = 0; i < self.settings.users.length; i++) {
+        self.user_data[self.settings.users[i]].trainerPath.setOptions({
+          strokeOpacity: checked ? 1.0 : 0.0
+        });
+      }
+  },
   bindUi: function() {
     var self = this;
     $('#switchPan').prop('checked', self.settings.userFollow);
     $('#switchZoom').prop('checked', self.settings.userZoom);
-    $('#strokeOn').prop('checked', false);
+    $('#strokeOn').prop('checked', self.settings.botPath);
 
     $('#switchPan').change(function() {
       if (this.checked) {
@@ -149,11 +157,8 @@ var mapView = {
     });
 
     $('#strokeOn').change(function() {
-      for (var i = 0; i < self.settings.users.length; i++) {
-        self.user_data[self.settings.users[i]].trainerPath.setOptions({
-          strokeOpacity: this.checked ? 1.0 : 0.0
-        });
-      }
+      self.settings.botPath = this.checked;
+      self.setBotPathOptions(this.checked);
     });
 
     $('#optionsButton').click(function() {
@@ -800,6 +805,7 @@ var mapView = {
       } else {
         self.user_data[self.settings.users[user_index]].trainerPath.setPath(self.pathcoords[self.settings.users[user_index]]);
       }
+      self.setBotPathOptions(self.settings.botPath);
     }
     if (self.settings.users.length === 1 && self.settings.userZoom === true) {
       self.map.setZoom(self.settings.zoom);
@@ -833,7 +839,7 @@ var mapView = {
     xhr.open('GET', path, true);
     xhr.send();
   },
-  
+
 /*
   loadJSON: function(path, success, error, successData) {
     $.getJSON({
@@ -848,7 +854,7 @@ var mapView = {
     });
   },
 */
-  
+
   // Adds events to log panel and if it's closed sends Toast
   log: function(log_object) {
     var currentDate = new Date();
