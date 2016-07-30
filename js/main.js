@@ -60,6 +60,7 @@ var mapView = {
   pokedex: {},
   pokemonArray: {},
   pokemoncandyArray: {},
+  levelXpArray: {},
   stats: {},
   user_data: {},
   pathcoords: {},
@@ -111,6 +112,9 @@ var mapView = {
       self.loadJSON('data/pokemoncandy.json', function(data, successData) {
         self.pokemoncandyArray = data;
       }, self.errorFunc, 'pokemonCandy');
+      self.loadJSON('data/levelXp.json', function(data, successData) {
+        self.levelXpArray = data;
+      }, self.errorFunc, 'levelXp');
       for (var i = 0; i < self.settings.users.length; i++) {
         var user = self.settings.users[i];
         self.user_data[user] = {};
@@ -242,14 +246,15 @@ var mapView = {
           '</h5><br>Level: ' +
           current_user_stats.level +
           '<br><div class="progress botbar-' + user_id + '" style="height: 10px"> <div class="determinate bot-' + user_id + '" style="width: '+
-          (current_user_stats.experience/
-          current_user_stats.next_level_xp) * 100 +
-          '%"></div></div>Exp: ' +
+          ((current_user_stats.experience - self.levelXpArray[current_user_stats.level - 1].current_level_xp) /
+          self.levelXpArray[current_user_stats.level - 1].exp_to_next_level) * 100 +
+          '%"></div></div>Total Exp: ' +
           current_user_stats.experience +
           '<br>Exp to Lvl ' +
           (parseInt(current_user_stats.level, 10) + 1) +
           ': ' +
-          (parseInt(current_user_stats.next_level_xp, 10) - current_user_stats.experience) +
+          (current_user_stats.experience - self.levelXpArray[current_user_stats.level - 1].current_level_xp) +
+		  ' / ' + self.levelXpArray[current_user_stats.level - 1].exp_to_next_level +
           '<br>Pokemon Encountered: ' +
           (current_user_stats.pokemons_encountered || 0) +
           '<br>Pokeballs Thrown: ' +
