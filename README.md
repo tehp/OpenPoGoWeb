@@ -30,5 +30,8 @@ $ python -m SimpleHTTPServer
 
 This will enable you to view your page on [http://localhost:8000](http://localhost:8000)  
 
+## Troubleshooting
+1. If you have the latest code of both web and bot project and start the web server correctly, however you see a blank page when hit localhost:8000: clear your browser history data/cookie and try again. For Chrome user, try to open a Incognito window.
+
 ## Contributing
 If you would like to contribute please review OpenPoGo's [contributing](https://github.com/OpenPoGo/OpenPoGoBot/blob/master/CONTRIBUTING.md) guidelines and submit a pull request.  
