@@ -211,7 +211,15 @@ var mapView = {
         lat: 50.0830986,
         lng: 6.7613762
       },
-      zoom: 8
+      zoom: 8,
+      mapTypeId: 'roadmap',
+      styles: [ 
+        { "featureType": "road", "elementType": "geometry.fill", "stylers": [ { "color": "#4f9f92" }, { "visibility": "on" } ] },
+        { "featureType": "water", "elementType": "geometry.stroke", "stylers": [ { "color": "#feff95" }, { "visibility": "on" }, { "weight": 1.2 } ] },
+        { "featureType": "landscape", "elementType": "geometry", "stylers": [ { "color": "#adff9d" }, { "visibility": "on" } ] },
+        { "featureType": "water", "stylers": [ { "visibility": "on" }, { "color": "#147dd9" } ] },
+        { "featureType": "poi", "elementType": "geometry.fill", "stylers": [ { "color": "#d3ffcc" } ] },{ "elementType": "labels", "stylers": [ { "visibility": "off" } ] } 
+      ]
     });
     self.placeTrainer();
     self.addCatchable();
