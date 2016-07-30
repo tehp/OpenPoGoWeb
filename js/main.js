@@ -339,6 +339,7 @@ var mapView = {
         sortButtons += '<div class="chip"><a href="#" data-sort="name">Name</a></div>';
         sortButtons += '<div class="chip"><a href="#" data-sort="id">ID</a></div>';
         sortButtons += '<div class="chip"><a href="#" data-sort="time">Time</a></div>';
+        sortButtons += '<div class="chip"><a href="#" data-sort="candy">Candy</a></div>';
         sortButtons += '</div>';
 
         $('#sortButtons').html(sortButtons);
