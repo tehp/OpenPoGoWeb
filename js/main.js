@@ -1,12 +1,15 @@
 'use strict';
 
+var socket_io;
+var pokemonActions;
+
 $(document).ready(function() {
   mapView.init();
-  var socket = io.connect('http://' + document.domain + ':' + location.port + '/event');
-    socket.on('connect', function() {
+  socket_io = io.connect('http://' + document.domain + ':' + location.port + '/event');
+    socket_io.on('connect', function() {
       console.log('connected!');
     });
-    socket.on('logging', function(msg) {
+    socket_io.on('logging', function(msg) {
       for(var i = 0; i < msg.length; i++) {
         mapView.log({
           message: msg[i].output,
@@ -14,6 +17,53 @@ $(document).ready(function() {
         });
       }
     });
+
+    pokemonActions = function(socket_io){
+        var actions = {
+            releasePokemon: {
+                button: function(pokemon, user_id){
+                    return '<a href="#!" onClick="pokemonActions.releasePokemon.action(\''+pokemon.unique_id+'\')">Release</a>';
+                },
+                action: function(id){
+                    if(confirm("Are you sure you want to release this pokemon? THIS CANNOT BE UNDONE!")){
+                        socket_io.emit('user_action', {'event':'release_pokemon', data: {'pokemon_id': id}});
+                        mapView.sortAndShowBagPokemon(false, false);
+                    }
+                }
+            },
+
+            evolvePokemon: {
+                button: function(pokemon, user_id){
+                    var pkmnData = mapView.pokemonArray[pokemon.id - 1],
+                        candy = mapView.getCandy(pokemon.id, user_id),
+                        canEvolve = false;
+                    if("undefined" != typeof pkmnData['Next evolution(s)'] && "undefined" != typeof pkmnData['Next Evolution Requirements']){
+                        canEvolve = (candy >= pkmnData['Next Evolution Requirements']['Amount'])
+                    }
+                    return (canEvolve ? '<a href="#!" onClick="pokemonActions.evolvePokemon.action(\''+pokemon.unique_id+'\')">Evolve</a>' : false);
+                },
+                action: function(id){
+                    if(confirm("Are you sure you want to evolve this pokemon? THIS CANNOT BE UNDONE!")){
+                        socket_io.emit('user_action', {'event':'evolve_pokemon', data: {'pokemon_id': id}});
+                        mapView.sortAndShowBagPokemon(false, false);
+                    }
+                }
+            }
+        }
+
+        var enabledActions = {};
+        for(var i in actions){
+            if(mapView.settings.actionsEnabled === true){
+                enabledActions[i] = actions[i];
+            } else if(Array.isArray(mapView.settings.actionsEnabled)){
+                if (mapView.settings.actionsEnabled.indexOf(i) !== -1){
+                    enabledActions[i] = actions[i];
+                }
+            }
+        }
+
+        return enabledActions;
+    }(socket_io)
 });
 
 var mapView = {
@@ -534,8 +584,8 @@ var mapView = {
       eggs = 0,
       sortedPokemon = [],
       out = '',
-      user = self.user_data[self.settings.users[user_id]],
-      user_id = user_id || 0;
+      user_id = user_id || 0,
+      user = self.user_data[self.settings.users[user_id]];
 
     if (!user.bagPokemon.length) return;
 
@@ -547,6 +597,7 @@ var mapView = {
       }
       var pokemonData = user.bagPokemon[i].inventory_item_data.pokemon_data,
         pkmID = pokemonData.pokemon_id,
+        pkmUID = pokemonData.id,
         pkmnName = self.pokemonArray[pkmID - 1].Name,
         pkmCP = pokemonData.cp,
         pkmIVA = pokemonData.individual_attack || 0,
@@ -560,6 +611,7 @@ var mapView = {
       sortedPokemon.push({
         "name": pkmnName,
         "id": pkmID,
+        "unique_id": pkmUID,
         "cp": pkmCP,
         "iv": pkmIV,
         "attack": pkmIVA,
@@ -628,6 +680,7 @@ var mapView = {
     }
     for (var i = 0; i < sortedPokemon.length; i++) {
       var pkmnNum = sortedPokemon[i].id,
+        pkmnUnique = sortedPokemon[i].unique_id,
         pkmnImage = self.pad_with_zeroes(pkmnNum, 3) + '.png',
         pkmnName = self.pokemonArray[pkmnNum - 1].Name,
         pkmnCP = sortedPokemon[i].cp,
@@ -647,8 +700,36 @@ var mapView = {
         '<br><b>CP:</b>' + pkmnCP +
         '<br><b>IV:</b> ' + (pkmnIV >= 0.8 ? '<span style="color: #039be5">' + pkmnIV + '</span>' : pkmnIV) +
         '<br><b>A/D/S:</b> ' + pkmnIVA + '/' + pkmnIVD + '/' + pkmnIVS +
-        '<br><b>Candy: </b>' + candyNum +
-        '</div>';
+        '<br><b>Candy: </b>' + candyNum
+        ;
+
+      if(Object.keys(pokemonActions).length){
+          var actionsOut = ''
+          for(var pa in pokemonActions){
+            var content = pokemonActions[pa].button(sortedPokemon[i], user_id);
+            if(content){
+                actionsOut += '<li>'+pokemonActions[pa].button(sortedPokemon[i], user_id)+'</li>';
+            }
+          }
+
+          if(actionsOut){
+              out +=
+                '<div>' +
+                '  <a class="dropdown-button btn"  href="#" data-activates="poke-actions-'+pkmnUnique+'">' +
+                '    Actions' +
+                '  </a>' +
+                '  <ul id="poke-actions-'+pkmnUnique+'" class="dropdown-content">' +
+                actionsOut +
+                '  </ul>' +
+                '</div><br>';
+          } else {
+              out += '<div>' +
+                '  <a class="dropdown-button btn disabled" href="#">Actions</a>' +
+                '</div><br>';
+          }
+      }
+
+      out += '</div>';
     }
     // Add number of eggs
     out += '<div class="col s12 m4 l3 center" style="float: left;"><img src="image/items/Egg.png" class="png_img"><br><b>You have ' + eggs + ' egg' + (eggs !== 1 ? "s" : "") + '</div>';
@@ -677,6 +758,7 @@ var mapView = {
       return (nth % 4 === 0) ? '</div></div><div class="row"><div' : match;
     });
     $('#subcontent').html(out);
+    $('.dropdown-button').dropdown();
   },
   sortAndShowPokedex: function(sortOn, user_id) {
     var self = this,
