@@ -70,6 +70,9 @@ html, body {
   left:7%;
   z-index: 0
 }
+#toast-container > .toast {
+    float: left;
+}
 #bots-list {
 	max-height: 80vh;
 }
