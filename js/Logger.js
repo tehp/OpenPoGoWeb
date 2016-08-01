@@ -1,6 +1,5 @@
 class Logger {
     constructor(panel) {
-        //this.panel = $("#logs-panel .card-content");
         this.panel = $(panel);
     }
 

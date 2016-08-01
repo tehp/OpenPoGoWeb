@@ -8,6 +8,8 @@ class Player {
         this.pokedex = undefined;
         this.stats = undefined;
         this.trainerPath = undefined;
+
+        this._nearby_pokemon = {};
     }
 
     updateInventory(data) {
@@ -23,7 +25,7 @@ class Player {
 
         this.bagCandy = filterInventory(data, 'candy');
         this.bagItems = filterInventory(data, 'item');
-        this.pokedex = new Pokedex(filterInventory(data, 'pokedex_entry'));
+        //this.pokedex = new Pokedex(filterInventory(data, 'pokedex_entry'));
         this.stats = filterInventory(data, 'player_stats')[0].inventory_item_data.player_stats;
         this.eggs = filterInventory(data, 'egg_incubators');
         this.updatePokemon(filterInventory(data, 'pokemon_data'));
@@ -38,6 +40,21 @@ class Player {
             }
             this.bagPokemon.push(new Pokemon(pokeData));
         }
+    }
+
+    updatePokemonAtSpawnPoint(spawn_point_id, data) {
+        this._nearby_pokemon[spawn_point_id] = data;
+    }
+
+    getPokemonAtSpawnPoint(spawn_point_id) {
+        return this._nearby_pokemon[spawn_point_id];
+    }
+    
+    removePokemonAtSpawnPoint(spawn_point_id) {
+        if(this.getPokemonAtSpawnPoint(spawn_point_id)) {
+            this.getPokemonAtSpawnPoint(spawn_point_id).setMap(null);
+        }
+        this._nearby_pokemon[spawn_point_id] = undefined;
     }
 
     getCandy(pokemon_num) {
@@ -55,54 +72,50 @@ class Player {
         switch (sortKey) {
             case 'name':
                 sortedPokemon.sort(function (a, b) {
-                    if (a.name < b.name) return -1;
-                    if (a.name > b.name) return 1;
-                    if (a.combatPower > b.combatPower) return -1;
-                    if (a.combatPower < b.combatPower) return 1;
+                    if (a.getName() < b.getName()) return -1;
+                    if (a.getName() > b.getName()) return 1;
+                    if (a.getCombatPower() > b.getCombatPower()) return -1;
+                    if (a.getCombatPower() < b.getCombatPower()) return 1;
                     return 0;
                 });
                 break;
             case 'id':
                 sortedPokemon.sort(function (a, b) {
-                    if (a.id < b.id) return -1;
-                    if (a.id > b.id) return 1;
-                    if (a.combatPower > b.combatPower) return -1;
-                    if (a.combatPower < b.combatPower) return 1;
-                    return 0;
-                });
-                break;
-            case 'cp':
-                sortedPokemon.sort(function (a, b) {
-                    if (a.combatPower > b.combatPower) return -1;
-                    if (a.combatPower < b.combatPower) return 1;
+                    if (a.getSpeciesNum() < b.getSpeciesNum()) return -1;
+                    if (a.getSpeciesNum() > b.getSpeciesNum()) return 1;
+                    if (a.getCombatPower() > b.getCombatPower()) return -1;
+                    if (a.getCombatPower() < b.getCombatPower()) return 1;
                     return 0;
                 });
                 break;
             case 'iv':
                 sortedPokemon.sort(function (a, b) {
-                    if (a.iv > b.iv) return -1;
-                    if (a.iv < b.iv) return 1;
+                    if (a.getPotential() > b.getPotential()) return -1;
+                    if (a.getPotential() < b.getPotential()) return 1;
                     return 0;
                 });
                 break;
             case 'time':
                 sortedPokemon.sort(function (a, b) {
-                    if (a.creationTime > b.creationTime) return -1;
-                    if (a.creationTime < b.creationTime) return 1;
+                    if (a.getCreationTime() > b.getCreationTime()) return -1;
+                    if (a.getCreationTime() < b.getCreationTime()) return 1;
                     return 0;
                 });
                 break;
             case 'candy':
                 sortedPokemon.sort(function (a, b) {
-                    if (this.getCandy(a.id) > this.getCandy(b.id)) return -1;
-                    if (this.getCandy(a.id) < this.getCandy(b.id)) return 1;
+                    var a_candy = this.getCandy(a.getSpeciesNum());
+                    var b_candy = this.getCandy(b.getSpeciesNum());
+                    if (a_candy > b_candy) return -1;
+                    if (a_candy < b_candy) return 1;
                     return 0;
                 });
                 break;
+            case 'cp':
             default:
                 sortedPokemon.sort(function (a, b) {
-                    if (a.cp > b.cp) return -1;
-                    if (a.cp < b.cp) return 1;
+                    if (a.getCombatPower() > b.getCombatPower()) return -1;
+                    if (a.getCombatPower() < b.getCombatPower()) return 1;
                     return 0;
                 });
                 break;

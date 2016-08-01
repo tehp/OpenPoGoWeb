@@ -4,69 +4,14 @@ var logger = new Logger("#logs-panel .card-content");
 var socket_io;
 var pokemonActions;
 
-$(document).ready(function () {
-    mapView.init();
-    socket_io = io.connect('http://' + document.domain + ':' + location.port + '/event');
-    socket_io.on('connect', function () {
-        console.log('connected!');
-    });
-    socket_io.on('logging', function (msg) {
-        for (var i = 0; i < msg.length; i++) {
-            logger.log({
-                message: msg[i].output,
-                color: msg[i].color + "-text",
-                toast: msg[i].toast || false
-            });
-        }
-    });
-
-    pokemonActions = function (socket_io) {
-        var actions = {
-            releasePokemon: {
-                button: function (pokemon, user_id) {
-                    return '<a href="#!" onClick="pokemonActions.releasePokemon.action(\'' + pokemon.unique_id + '\')">Release</a>';
-                },
-                action: function (id) {
-                    if (confirm("Are you sure you want to release this pokemon? THIS CANNOT BE UNDONE!")) {
-                        socket_io.emit('user_action', {'event': 'release_pokemon', data: {'pokemon_id': id}});
-                        mapView.sortAndShowBagPokemon(false, false);
-                    }
-                }
-            },
-
-            evolvePokemon: {
-                button: function (pokemon, user_id) {
-                    var pkmnData = mapView.pokemonArray[pokemon.id - 1],
-                        candy = mapView.getCandy(pokemon.id, user_id),
-                        canEvolve = false;
-                    if ("undefined" != typeof pkmnData['Next evolution(s)'] && "undefined" != typeof pkmnData['Next Evolution Requirements']) {
-                        canEvolve = (candy >= pkmnData['Next Evolution Requirements']['Amount'])
-                    }
-                    return (canEvolve ? '<a href="#!" onClick="pokemonActions.evolvePokemon.action(\'' + pokemon.unique_id + '\')">Evolve</a>' : false);
-                },
-                action: function (id) {
-                    if (confirm("Are you sure you want to evolve this pokemon? THIS CANNOT BE UNDONE!")) {
-                        socket_io.emit('user_action', {'event': 'evolve_pokemon', data: {'pokemon_id': id}});
-                        mapView.sortAndShowBagPokemon(false, false);
-                    }
-                }
-            }
-        };
-
-        var enabledActions = {};
-        for (var i in actions) {
-            if (mapView.settings.actionsEnabled === true) {
-                enabledActions[i] = actions[i];
-            } else if (Array.isArray(mapView.settings.actionsEnabled)) {
-                if (mapView.settings.actionsEnabled.indexOf(i) !== -1) {
-                    enabledActions[i] = actions[i];
-                }
-            }
-        }
-
-        return enabledActions;
-    }(socket_io)
-});
+if (!String.prototype.format) {
+    String.prototype.format = function () {
+        var args = arguments;
+        return this.replace(/{(\d+)}/g, function (match, number) {
+            return typeof args[number] != 'undefined' ? args[number] : match;
+        });
+    };
+}
 
 function loadJSON(path) {
     return new Promise(function (fulfill, reject) {
@@ -141,19 +86,11 @@ var mapView = {
         self.settings = $.extend(true, self.settings, userInfo);
         self.bindUi();
 
-        loadJSON('data/pokemondata.json').then(Pokemon.setPokemonData);
-        loadJSON('data/pokemoncandy.json').then(Pokemon.setPokemonCandyData);
-        loadJSON('data/levelXp.json').then(Player.setXpLevelData);
-
         for (var i = 0; i < self.settings.users.length; i++) {
             var username = self.settings.users[i];
             self.user_data[username] = new Player(username);
             self.pathcoords[username] = [];
         }
-
-        $.getScript('https://maps.googleapis.com/maps/api/js?key={0}&libraries=drawing'.format(self.settings.gMapsAPIKey), function () {
-            self.initMap();
-        });
     },
     setBotPathOptions: function (checked) {
         var self = this;
@@ -264,19 +201,8 @@ var mapView = {
             ]
         });
         self.placeTrainer();
-        self.addCatchable();
         setInterval(self.placeTrainer, 1000);
-        setInterval(self.addCatchable, 1000);
         setInterval(self.addInventory, 5000);
-    },
-    addCatchable: function () {
-        var self = mapView;
-        for (var i = 0; i < self.settings.users.length; i++) {
-            var username = self.settings.users[i];
-            loadJSON('catchable-' + username + '.json').then(function (data) {
-                self.catchSuccess(data, username);
-            });
-        }
     },
     addInventory: function () {
         var self = mapView;
@@ -362,7 +288,7 @@ var mapView = {
 
                 var sortButtons = '<div class="col s12 pokemon-sort" data-user-id="' + user_id + '">Sort : ';
                 sortButtons += '<div class="chip"><a href="#" data-sort="cp">CP</a></div>';
-                sortButtons += '<div class="chip"><a href="#" data-sort="iv">IV</a></div>';
+                sortButtons += '<div class="chip"><a href="#" data-sort="iv">potential</a></div>';
                 sortButtons += '<div class="chip"><a href="#" data-sort="name">Name</a></div>';
                 sortButtons += '<div class="chip"><a href="#" data-sort="id">ID</a></div>';
                 sortButtons += '<div class="chip"><a href="#" data-sort="time">Time</a></div>';
@@ -432,67 +358,6 @@ var mapView = {
         });
         $('.collapsible').collapsible();
     },
-    catchSuccess: function (data, username) {
-        var self = mapView,
-            user = self.user_data[username],
-            poke_name = '';
-        if (data !== undefined && Object.keys(data).length > 0) {
-            if (user.catchables === undefined) {
-                user.catchables = {};
-            }
-            if (data.latitude !== undefined) {
-                if (user.catchables.hasOwnProperty(data.spawnpoint_id) === false) {
-                    poke_name = Pokemon.getPokemonById(data.pokemon_id).Name;
-                    logger.log({
-                        message: "[" + username + "] " + poke_name + " appeared",
-                        color: "green-text"
-                    });
-                    user.catchables[data.spawnpoint_id] = new google.maps.Marker({
-                        map: self.map,
-                        position: {
-                            lat: parseFloat(data.latitude),
-                            lng: parseFloat(data.longitude)
-                        },
-                        icon: {
-                            url: 'image/pokemon/' + Pokemon.getImageById(data.pokemon_id),
-                            scaledSize: new google.maps.Size(70, 70)
-                        },
-                        zIndex: 4,
-                        optimized: false,
-                        clickable: false
-                    });
-                    if (self.settings.userZoom === true) {
-                        self.map.setZoom(self.settings.zoom);
-                    }
-                    if (self.settings.userFollow === true) {
-                        self.map.panTo({
-                            lat: parseFloat(data.latitude),
-                            lng: parseFloat(data.longitude)
-                        });
-                    }
-                } else {
-                    user.catchables[data.spawnpoint_id].setPosition({
-                        lat: parseFloat(data.latitude),
-                        lng: parseFloat(data.longitude)
-                    });
-                    user.catchables[data.spawnpoint_id].setIcon({
-                        url: 'image/pokemon/' + Pokemon.getImageById(data.pokemon_id),
-                        scaledSize: new google.maps.Size(70, 70)
-                    });
-                }
-            }
-        } else {
-            if (user.catchables !== undefined && Object.keys(user.catchables).length > 0) {
-                logger.log({
-                    message: "[" + username + "] " + poke_name + " has been caught or fled"
-                });
-                for (var key in user.catchables) {
-                    user.catchables[key].setMap(null);
-                }
-                user.catchables = undefined;
-            }
-        }
-    },
     findBot: function (user_index) {
         var self = this,
             username = self.settings.users[user_index],
@@ -528,16 +393,16 @@ var mapView = {
 
         for (var i = 0; i < sortedPokemon.length; i++) {
             var myPokemon = sortedPokemon[i];
-            var pkmnNum = myPokemon.id,
-                pkmnImage = Pokemon.getImageById(myPokemon.id),
+            var pkmnNum = myPokemon.pokemon_id,
+                pkmnImage = myPokemon.getImage(),
                 pkmnName = Pokemon.getNameById(pkmnNum),
                 pkmnCP = myPokemon.combatPower,
-                pkmnIV = myPokemon.IV,
-                pkmnIVA = myPokemon.attackIV,
-                pkmnIVD = myPokemon.defenseIV,
-                pkmnIVS = myPokemon.speedIV,
+                pkmnIV = myPokemon.getPotential(),
+                pkmnIVA = myPokemon.attackPotential,
+                pkmnIVD = myPokemon.defensePotential,
+                pkmnIVS = myPokemon.speedPotential,
                 pkmnHP = myPokemon.hp,
-                candyNum = self.getCandy(pkmnNum, user_id);
+                candyNum = user.getCandy(pkmnNum);
 
             out += '<div class="col s12 m6 l3 center"><img src="image/pokemon/' +
                 pkmnImage + '" class="png_img"><br><b>' +
@@ -545,7 +410,7 @@ var mapView = {
                 '</b><br><div class="progress pkmn-progress pkmn-' + pkmnNum + '"> <div class="determinate pkmn-' + pkmnNum + '" style="width: ' + (pkmnHP / pkmnMHP) * 100 + '%"></div> </div>' +
                 '<b>HP:</b> ' + pkmnHP + ' / ' + pkmnMHP +
                 '<br><b>CP:</b>' + pkmnCP +
-                '<br><b>IV:</b> ' + (pkmnIV >= 0.8 ? '<span style="color: #039be5">' + pkmnIV + '</span>' : pkmnIV) +
+                '<br><b>potential:</b> ' + (pkmnIV >= 0.8 ? '<span style="color: #039be5">' + pkmnIV + '</span>' : pkmnIV) +
                 '<br><b>A/D/S:</b> ' + pkmnIVA + '/' + pkmnIVD + '/' + pkmnIVS +
                 '<br><b>Candy: </b>' + candyNum
             ;
@@ -771,11 +636,124 @@ var mapView = {
     }
 };
 
-if (!String.prototype.format) {
-    String.prototype.format = function () {
-        var args = arguments;
-        return this.replace(/{(\d+)}/g, function (match, number) {
-            return typeof args[number] != 'undefined' ? args[number] : match;
+Promise.all([
+    loadJSON('data/pokemondata.json').then(Pokemon.setPokemonData),
+    loadJSON('data/pokemoncandy.json').then(Pokemon.setPokemonCandyData),
+    loadJSON('data/levelXp.json').then(Player.setXpLevelData)
+]).then(function() {
+    $.getScript('https://maps.googleapis.com/maps/api/js?key={0}&libraries=drawing'.format(userInfo.gMapsAPIKey), function () {
+        mapView.init();
+        mapView.initMap();
+
+        $(document).ready(function () {
+            socket_io = io.connect('http://' + document.domain + ':' + location.port + '/event');
+            socket_io.on('connect', function () {
+                console.log('connected!');
+            });
+            socket_io.on('logging', function (msg) {
+                for (var i = 0; i < msg.length; i++) {
+                    logger.log({
+                        message: msg[i].output,
+                        color: msg[i].color + "-text",
+                        toast: msg[i].toast || false
+                    });
+                }
+            });
+            socket_io.on("nearby_pokemon", function(data) {
+                var nearby_pokemon = data["nearby_pokemon"];
+                var username = data["username"];
+                var player = mapView.user_data[username];
+
+                for (var i = 0; i < nearby_pokemon.length; i++) {
+                    var encounter = new PokemonEncounter(nearby_pokemon[i]);
+                    var pokemon_name = encounter.getSpeciesName();
+                    logger.log({
+                        message: "[" + username + "] " + pokemon_name + " appeared",
+                        color: "green-text"
+                    });
+
+                    var spawn_point_id = data["spawn_point_id"];
+
+                    var map_marker = player.getPokemonAtSpawnPoint(spawn_point_id);
+                    if (encounter.getEncounterId() !== undefined && encounter.getSpeciesNum() !== undefined) {
+                        if (map_marker === undefined) {
+                            player.updatePokemonAtSpawnPoint(spawn_point_id, new google.maps.Marker({
+                                map: mapView.map,
+                                position: {
+                                    lat: encounter.getLatitude(),
+                                    lng: encounter.getLongitude()
+                                },
+                                icon: {
+                                    url: 'image/pokemon/' + Pokemon.getImageById(encounter.getSpeciesNum()),
+                                    scaledSize: new google.maps.Size(70, 70)
+                                },
+                                zIndex: 4,
+                                optimized: false,
+                                clickable: false
+                            }));
+                        } else {
+                            map_marker.setPosition({
+                                lat: encounter.getLatitude(),
+                                lng: encounter.getLongitude()
+                            });
+                            map_marker.setIcon({
+                                url: 'image/pokemon/' + Pokemon.getImageById(encounter.getSpeciesNum()),
+                                scaledSize: new google.maps.Size(70, 70)
+                            });
+                        }
+                    } else {
+                        player.removePokemonAtSpawnPoint(spawn_point_id);
+                    }
+                }
+            });
+
+            pokemonActions = function (socket_io) {
+                var actions = {
+                    releasePokemon: {
+                        button: function (pokemon, user_id) {
+                            return '<a href="#!" onClick="pokemonActions.releasePokemon.action(\'' + pokemon.unique_id + '\')">Release</a>';
+                        },
+                        action: function (id) {
+                            if (confirm("Are you sure you want to release this pokemon? THIS CANNOT BE UNDONE!")) {
+                                socket_io.emit('user_action', {'event': 'release_pokemon', data: {'pokemon_id': id}});
+                                mapView.sortAndShowBagPokemon(false, false);
+                            }
+                        }
+                    },
+
+                    evolvePokemon: {
+                        button: function (pokemon, user_id) {
+                            var user = mapView.user_data[mapView.settings.users[user_id]];
+                            var pkmnData = mapView.pokemonArray[pokemon.pokemon_id - 1],
+                                candy = user.getCandy(pokemon.pokemon_id),
+                                canEvolve = false;
+                            if ("undefined" != typeof pkmnData['Next evolution(s)'] && "undefined" != typeof pkmnData['Next Evolution Requirements']) {
+                                canEvolve = (candy >= pkmnData['Next Evolution Requirements']['Amount'])
+                            }
+                            return (canEvolve ? '<a href="#!" onClick="pokemonActions.evolvePokemon.action(\'' + pokemon.unique_id + '\')">Evolve</a>' : false);
+                        },
+                        action: function (id) {
+                            if (confirm("Are you sure you want to evolve this pokemon? THIS CANNOT BE UNDONE!")) {
+                                socket_io.emit('user_action', {'event': 'evolve_pokemon', data: {'pokemon_id': id}});
+                                mapView.sortAndShowBagPokemon(false, false);
+                            }
+                        }
+                    }
+                };
+
+                var enabledActions = {};
+                for (var i in actions) {
+                    if (mapView.settings.actionsEnabled === true) {
+                        enabledActions[i] = actions[i];
+                    } else if (Array.isArray(mapView.settings.actionsEnabled)) {
+                        if (mapView.settings.actionsEnabled.indexOf(i) !== -1) {
+                            enabledActions[i] = actions[i];
+                        }
+                    }
+                }
+
+                return enabledActions;
+            }(socket_io)
         });
-    };
-}
+    });
+});

@@ -15,6 +15,7 @@ instance/
 .DS_Store
 Thumbs.db
 *.swp
+.idea
 
 # Generated and config files
 userdata.js

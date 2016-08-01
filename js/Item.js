@@ -1,4 +1,22 @@
 class Item {
+
+    constructor(item_id, item_count) {
+        this.item_id = item_id;
+        this.item_count = item_count;
+    }
+
+    getItemId() {
+        return this.item_id;
+    }
+
+    getItemCount() {
+        return this.item_count;
+    }
+
+    getItemName() {
+        return Item.getName(this.getItemId());
+    }
+
     static getName(id) {
         return Item.itemsArray[id] || "Unknown";
     }
