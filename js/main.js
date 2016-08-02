@@ -3,6 +3,7 @@
 var logger = new Logger("#logs-panel .card-content");
 var activeUsers = {};
 var activeUserList = [];
+var nearbyPokemon = {};
 var socket_io;
 var pokemonActions;
 
@@ -30,6 +31,21 @@ function loadJSON(path) {
         xhr.open('GET', path + "?v=" + Date.now(), true);
         xhr.send();
     });
+}
+
+function updatePokemonAtSpawnPoint(spawn_point_id, data) {
+    nearbyPokemon[spawn_point_id] = data;
+}
+
+function getPokemonAtSpawnPoint(spawn_point_id) {
+    return nearbyPokemon[spawn_point_id];
+}
+
+function removePokemonAtSpawnPoint(spawn_point_id) {
+    if(getPokemonAtSpawnPoint(spawn_point_id)) {
+        getPokemonAtSpawnPoint(spawn_point_id).setMap(null);
+    }
+    nearbyPokemon[spawn_point_id] = undefined;
 }
 
 var mapView = {
@@ -515,193 +531,191 @@ Promise.all([
         }
     })
 ]).then(function() {
-    $.getScript('https://maps.googleapis.com/maps/api/js?key={0}&libraries=drawing'.format(userInfo.gMapsAPIKey), function () {
+    $(document).ready(function () {
         mapView.init();
         mapView.initMap();
-
-        $(document).ready(function () {
-            socket_io = io.connect('http://' + document.domain + ':' + location.port + '/event');
-            socket_io.on('connect', function () {
-                console.log('connected!');
-            });
-            socket_io.on('logging', function (msg) {
-                for (var i = 0; i < msg.length; i++) {
-                    logger.log({
-                        message: msg[i].output,
-                        color: msg[i].color + "-text",
-                        toast: msg[i].toast || false
-                    });
-                }
-            });
-            socket_io.on("bot_initialized", function(username) {
+        socket_io = io.connect('http://' + document.domain + ':' + location.port + '/event');
+        socket_io.on('connect', function () {
+            console.log('connected!');
+        });
+        socket_io.on('logging', function (msg) {
+            for (var i = 0; i < msg.length; i++) {
+                logger.log({
+                    message: msg[i].output,
+                    color: msg[i].color + "-text",
+                    toast: msg[i].toast || false
+                });
+            }
+        });
+        socket_io.on("bot_initialized", function(username) {
+            if (activeUsers[username] === undefined) {
                 activeUsers[username] = new Player(username);
-                mapView.pathcoords[username] = [];
-            });
-            socket_io.on("position", function(data) {
-                var username = data["username"];
-                var lat = data["coordinates"][0];
-                var lng = data["coordinates"][1];
-                var alt = data["coordinates"][2];
+            }
+            mapView.pathcoords[username] = [];
+        });
+        socket_io.on("position", function(data) {
+            var username = data["username"];
+            var lat = data["coordinates"][0];
+            var lng = data["coordinates"][1];
+            var alt = data["coordinates"][2];
 
-                mapView.pathcoords[username].push({
+            mapView.pathcoords[username].push({
+                lat: lat,
+                lng: lng
+            });
+
+            if (activeUsers[username].getMapMarker() === undefined) {
+                //self.buildTrainerList();
+                //self.addInventory();
+                logger.log({
+                    message: "Trainer loaded: " + username,
+                    color: "blue-text"
+                });
+                var randomSex = Math.floor(Math.random() * 1);
+                activeUsers[username].setMapMarker(new google.maps.Marker({
+                    map: mapView.map,
+                    position: {
+                        lat: lat,
+                        lng: lng
+                    },
+                    icon: 'image/trainer/' + mapView.trainerSex[randomSex] + Math.floor(Math.random() * mapView.numTrainers[randomSex] + 1) + '.png',
+                    zIndex: 2,
+                    label: username,
+                    clickable: false
+                }));
+            } else {
+                activeUsers[username].getMapMarker().setPosition({
                     lat: lat,
                     lng: lng
                 });
-
-                if (activeUsers[username].getMapMarker() === undefined) {
-                    //self.buildTrainerList();
-                    //self.addInventory();
-                    logger.log({
-                        message: "Trainer loaded: " + username,
-                        color: "blue-text"
-                    });
-                    var randomSex = Math.floor(Math.random() * 1);
-                    activeUsers[username].setMapMarker(new google.maps.Marker({
-                        map: mapView.map,
-                        position: {
-                            lat: lat,
-                            lng: lng
-                        },
-                        icon: 'image/trainer/' + mapView.trainerSex[randomSex] + Math.floor(Math.random() * mapView.numTrainers[randomSex] + 1) + '.png',
-                        zIndex: 2,
-                        label: username,
-                        clickable: false
-                    }));
+                if (mapView.pathcoords[username].length >= 2) {
+                    if (activeUsers[username].trainerPath !== undefined) {
+                        activeUsers[username].trainerPath.setPath(mapView.pathcoords[username]);
+                    } else {
+                        activeUsers[username].trainerPath = new google.maps.Polyline({
+                            map: mapView.map,
+                            path: mapView.pathcoords[username],
+                            geodisc: true,
+                            // Need to set proper stroke color
+                            strokeColor: mapView.pathColors[0],
+                            strokeOpacity: 0.0,
+                            strokeWeight: 2
+                        });
+                    }
                 } else {
-                    activeUsers[username].getMapMarker().setPosition({
+                    activeUsers[username].trainerPath.setPath(mapView.pathcoords[username]);
+                }
+                mapView.setBotPathOptions(mapView.settings.botPath);
+            }
+
+            if (activeUserList.length === 1) {
+                if (mapView.settings.userZoom === true) {
+                    mapView.map.setZoom(mapView.settings.zoom);
+                }
+                if (mapView.settings.userFollow === true) {
+                    mapView.map.panTo({
                         lat: lat,
                         lng: lng
                     });
-                    if (mapView.pathcoords[username].length >= 2) {
-                        if (activeUsers[username].trainerPath !== undefined) {
-                            activeUsers[username].trainerPath.setPath(mapView.pathcoords[username]);
-                        } else {
-                            activeUsers[username].trainerPath = new google.maps.Polyline({
-                                map: mapView.map,
-                                path: mapView.pathcoords[username],
-                                geodisc: true,
-                                // Need to set proper stroke color
-                                strokeColor: mapView.pathColors[0],
-                                strokeOpacity: 0.0,
-                                strokeWeight: 2
-                            });
-                        }
-                    } else {
-                        activeUsers[username].trainerPath.setPath(mapView.pathcoords[username]);
-                    }
-                    mapView.setBotPathOptions(mapView.settings.botPath);
                 }
-                
-                if (activeUserList.length === 1) {
-                    if (mapView.settings.userZoom === true) {
-                        mapView.map.setZoom(mapView.settings.zoom);
-                    }
-                    if (mapView.settings.userFollow === true) {
-                        mapView.map.panTo({
-                            lat: lat,
-                            lng: lng
-                        });
-                    }
-                }
-            });
-            socket_io.on("nearby_pokemon", function(data) {
-                var nearby_pokemon = data["nearby_pokemon"];
-                var username = data["username"];
-                var player = activeUsers[username];
-
-                for (var i = 0; i < nearby_pokemon.length; i++) {
-                    var encounter = new PokemonEncounter(nearby_pokemon[i]);
-                    var spawn_point_id = data["spawn_point_id"];
-
-                    var map_marker = player.getPokemonAtSpawnPoint(spawn_point_id);
-                    if (encounter.isCatchable()) {
-                        var pokemon_name = encounter.getSpeciesName();
-                        logger.log({
-                            message: "[" + username + "] " + pokemon_name + " appeared",
-                            color: "green-text"
-                        });
-                        if (map_marker === undefined) {
-                            player.updatePokemonAtSpawnPoint(spawn_point_id, new google.maps.Marker({
-                                map: mapView.map,
-                                position: {
-                                    lat: encounter.getLatitude(),
-                                    lng: encounter.getLongitude()
-                                },
-                                icon: {
-                                    url: 'image/pokemon/' + Pokemon.getImageById(encounter.getSpeciesNum()),
-                                    scaledSize: new google.maps.Size(70, 70)
-                                },
-                                zIndex: 4,
-                                optimized: false,
-                                clickable: false
-                            }));
-                        } else {
-                            map_marker.setPosition({
-                                lat: encounter.getLatitude(),
-                                lng: encounter.getLongitude()
-                            });
-                            map_marker.setIcon({
-                                url: 'image/pokemon/' + Pokemon.getImageById(encounter.getSpeciesNum()),
-                                scaledSize: new google.maps.Size(70, 70)
-                            });
-                        }
-                    } else {
-                        player.removePokemonAtSpawnPoint(spawn_point_id);
-                    }
-                }
-            });
-
-            socket_io.on("player", function(data) {
-
-            });
-
-            pokemonActions = function (socket_io) {
-                var actions = {
-                    releasePokemon: {
-                        button: function (pokemon, user_id) {
-                            return '<a href="#!" onClick="pokemonActions.releasePokemon.action(\'' + pokemon.unique_id + '\')">Release</a>';
-                        },
-                        action: function (id) {
-                            if (confirm("Are you sure you want to release this pokemon? THIS CANNOT BE UNDONE!")) {
-                                socket_io.emit('user_action', {'event': 'release_pokemon', data: {'pokemon_id': id}});
-                                mapView.sortAndShowBagPokemon(false, false);
-                            }
-                        }
-                    },
-
-                    evolvePokemon: {
-                        button: function (pokemon, user_id) {
-                            var user = activeUsers[mapView.settings.users[user_id]];
-                            var pkmnData = mapView.pokemonArray[pokemon.pokemon_id - 1],
-                                candy = user.getCandy(pokemon.pokemon_id),
-                                canEvolve = false;
-                            if ("undefined" != typeof pkmnData['Next evolution(s)'] && "undefined" != typeof pkmnData['Next Evolution Requirements']) {
-                                canEvolve = (candy >= pkmnData['Next Evolution Requirements']['Amount'])
-                            }
-                            return (canEvolve ? '<a href="#!" onClick="pokemonActions.evolvePokemon.action(\'' + pokemon.unique_id + '\')">Evolve</a>' : false);
-                        },
-                        action: function (id) {
-                            if (confirm("Are you sure you want to evolve this pokemon? THIS CANNOT BE UNDONE!")) {
-                                socket_io.emit('user_action', {'event': 'evolve_pokemon', data: {'pokemon_id': id}});
-                                mapView.sortAndShowBagPokemon(false, false);
-                            }
-                        }
-                    }
-                };
-
-                var enabledActions = {};
-                for (var i in actions) {
-                    if (mapView.settings.actionsEnabled === true) {
-                        enabledActions[i] = actions[i];
-                    } else if (Array.isArray(mapView.settings.actionsEnabled)) {
-                        if (mapView.settings.actionsEnabled.indexOf(i) !== -1) {
-                            enabledActions[i] = actions[i];
-                        }
-                    }
-                }
-
-                return enabledActions;
-            }(socket_io)
+            }
         });
+        socket_io.on("nearby_pokemon", function(data) {
+            var nearby_pokemon = data["nearby_pokemon"];
+            var username = data["username"];
+            var player = activeUsers[username];
+
+            for (var i = 0; i < nearby_pokemon.length; i++) {
+                var encounter = new PokemonEncounter(nearby_pokemon[i]);
+                var spawn_point_id = encounter.getSpawnPointId();
+
+                var map_marker = getPokemonAtSpawnPoint(spawn_point_id);
+                if (encounter.isCatchable()) {
+                    console.log(encounter);
+                    var pokemon_name = encounter.getSpeciesName();
+                    logger.log({
+                        message: "[" + username + "] " + pokemon_name + " appeared",
+                        color: "green-text"
+                    });
+
+                    if (map_marker === undefined) {
+                        map_marker = new google.maps.Marker({
+                            map: mapView.map,
+                            position: new google.maps.LatLng(encounter.getLatitude(),encounter.getLongitude()),
+                            icon: {
+                                url: 'image/pokemon/' + Pokemon.getImageById(encounter.getSpeciesNum()),
+                                scaledSize: new google.maps.Size(60, 60),
+                            },
+                            zIndex: 20,
+                            clickable: false
+                        });
+                        updatePokemonAtSpawnPoint(spawn_point_id, map_marker);
+                    } else {
+                        map_marker.setPosition({
+                            lat: encounter.getLatitude(),
+                            lng: encounter.getLongitude()
+                        });
+                        map_marker.setIcon({
+                            url: 'image/pokemon/' + Pokemon.getImageById(encounter.getSpeciesNum()),
+                            scaledSize: new google.maps.Size(60, 60)
+                        });
+                    }
+                } else {
+                    removePokemonAtSpawnPoint(spawn_point_id);
+                }
+            }
+        });
+
+        socket_io.on("player", function(data) {
+
+        });
+
+        pokemonActions = function (socket_io) {
+            var actions = {
+                releasePokemon: {
+                    button: function (pokemon, user_id) {
+                        return '<a href="#!" onClick="pokemonActions.releasePokemon.action(\'' + pokemon.unique_id + '\')">Release</a>';
+                    },
+                    action: function (id) {
+                        if (confirm("Are you sure you want to release this pokemon? THIS CANNOT BE UNDONE!")) {
+                            socket_io.emit('user_action', {'event': 'release_pokemon', data: {'pokemon_id': id}});
+                            mapView.sortAndShowBagPokemon(false, false);
+                        }
+                    }
+                },
+
+                evolvePokemon: {
+                    button: function (pokemon, user_id) {
+                        var user = activeUsers[mapView.settings.users[user_id]];
+                        var pkmnData = mapView.pokemonArray[pokemon.pokemon_id - 1],
+                            candy = user.getCandy(pokemon.pokemon_id),
+                            canEvolve = false;
+                        if ("undefined" != typeof pkmnData['Next evolution(s)'] && "undefined" != typeof pkmnData['Next Evolution Requirements']) {
+                            canEvolve = (candy >= pkmnData['Next Evolution Requirements']['Amount'])
+                        }
+                        return (canEvolve ? '<a href="#!" onClick="pokemonActions.evolvePokemon.action(\'' + pokemon.unique_id + '\')">Evolve</a>' : false);
+                    },
+                    action: function (id) {
+                        if (confirm("Are you sure you want to evolve this pokemon? THIS CANNOT BE UNDONE!")) {
+                            socket_io.emit('user_action', {'event': 'evolve_pokemon', data: {'pokemon_id': id}});
+                            mapView.sortAndShowBagPokemon(false, false);
+                        }
+                    }
+                }
+            };
+
+            var enabledActions = {};
+            for (var i in actions) {
+                if (mapView.settings.actionsEnabled === true) {
+                    enabledActions[i] = actions[i];
+                } else if (Array.isArray(mapView.settings.actionsEnabled)) {
+                    if (mapView.settings.actionsEnabled.indexOf(i) !== -1) {
+                        enabledActions[i] = actions[i];
+                    }
+                }
+            }
+
+            return enabledActions;
+        }(socket_io)
     });
 });

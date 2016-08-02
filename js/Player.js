@@ -43,21 +43,6 @@ class Player {
         }
     }
 
-    updatePokemonAtSpawnPoint(spawn_point_id, data) {
-        this._nearby_pokemon[spawn_point_id] = data;
-    }
-
-    getPokemonAtSpawnPoint(spawn_point_id) {
-        return this._nearby_pokemon[spawn_point_id];
-    }
-    
-    removePokemonAtSpawnPoint(spawn_point_id) {
-        if(this.getPokemonAtSpawnPoint(spawn_point_id)) {
-            this.getPokemonAtSpawnPoint(spawn_point_id).setMap(null);
-        }
-        this._nearby_pokemon[spawn_point_id] = undefined;
-    }
-
     getMapMarker() {
         return this._marker;
     }

@@ -1,7 +1,7 @@
 class PokemonEncounter {
     constructor(data) {
         this._encounter_id = data["encounter_id"];
-        this._expiration_time_ms = data["expiration_time_ms"];
+        this._expiration_time_ms = data["expiration_timestamp_ms"];
         this._latitude = data["latitude"];
         this._longitude = data["longitude"];
         this._spawn_point_id = data["spawn_point_id"];
@@ -37,6 +37,6 @@ class PokemonEncounter {
     }
 
     isCatchable() {
-        return this.getEncounterId() !== undefined && this.getSpeciesNum() !== undefined;
+        return this.getEncounterId() !== undefined && this.getSpeciesNum() !== undefined && this.getExpirationTime() > -1;
     }
 }
