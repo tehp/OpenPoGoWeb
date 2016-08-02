@@ -6,7 +6,6 @@ class PokemonEncounter {
         this._longitude = data["longitude"];
         this._spawn_point_id = data["spawn_point_id"];
         this._pokemon_id = data["pokemon_id"];
-        console.log(this);
     }
 
     getEncounterId() {
@@ -35,5 +34,9 @@ class PokemonEncounter {
 
     getSpawnPointId() {
         return this._spawn_point_id;
+    }
+
+    isCatchable() {
+        return this.getEncounterId() !== undefined && this.getSpeciesNum() !== undefined;
     }
 }

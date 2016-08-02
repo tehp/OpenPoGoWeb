@@ -10,6 +10,7 @@ class Player {
         this.trainerPath = undefined;
 
         this._nearby_pokemon = {};
+        this._marker = undefined;
     }
 
     updateInventory(data) {
@@ -55,6 +56,14 @@ class Player {
             this.getPokemonAtSpawnPoint(spawn_point_id).setMap(null);
         }
         this._nearby_pokemon[spawn_point_id] = undefined;
+    }
+
+    getMapMarker() {
+        return this._marker;
+    }
+
+    setMapMarker(marker) {
+        this._marker = marker;
     }
 
     getCandy(pokemon_num) {
