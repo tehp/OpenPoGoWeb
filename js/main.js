@@ -125,6 +125,7 @@ var mapView = {
   levelXpArray: {},
   stats: {},
   user_data: {},
+  user_xps: {},
   pathcoords: {},
   itemsArray: {
     '0': 'Unknown',
@@ -316,6 +317,17 @@ var mapView = {
         $('#subtitle').html('Trainer Info');
         $('#sortButtons').html('');
 
+        var xps = '';
+        if ((user_id in self.user_xps) && self.user_xps[user_id].length) {
+            var xp_first = self.user_xps[user_id][0];
+            var xp_last = self.user_xps[user_id][self.user_xps[user_id].length-1];
+            var d_xp = xp_last.xp - xp_first.xp;
+            var d_t = xp_last.t - xp_first.t;
+            if (d_t > 0) {
+                xps = '<br>XP/s: '+(Math.round(100*d_xp/d_t)/100)+ ' (earned '+d_xp+' XPs in last '+Math.round(d_t)+' s) ';
+            }
+        }
+
         out += '<div class="row"><div class="col s12"><h5>' +
           self.settings.users[user_id] +
           '</h5><br>Level: ' +
@@ -325,6 +337,7 @@ var mapView = {
           self.levelXpArray[current_user_stats.level - 1].exp_to_next_level) * 100 +
           '%"></div></div>Total Exp: ' +
           current_user_stats.experience +
+          xps +
           '<br>Exp to Lvl ' +
           (parseInt(current_user_stats.level, 10) + 1) +
           ': ' +
@@ -564,6 +577,17 @@ var mapView = {
     userData.stats = stats;
     userData.eggs = self.filter(data, 'egg_incubators');
     self.user_data[self.settings.users[user_index]] = userData;
+
+    if (!(user_index in self.user_xps)) {
+        self.user_xps[user_index] = [];
+    }
+
+    var t = (new Date()).getTime()/1000.0;
+    var xp = userData.stats[0].inventory_item_data.player_stats.experience;
+    self.user_xps[user_index].push({'t': t, 'xp': xp});
+    while (self.user_xps[user_index].length && t-self.user_xps[user_index][0].t > 600) {
+        self.user_xps[user_index].shift();
+    }
   },
   pad_with_zeroes: function(number, length) {
     var my_string = '' + number;
