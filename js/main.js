@@ -891,6 +891,14 @@ var mapView = {
                 infowindow.open(map, marker);
               };
             })(self.forts[fort.id], contentString, self.info_windows[fort.id]));
+          } else {
+              if (fort.type == 1) {
+                  if ('lure_info' in fort) {
+                      self.forts[fort.id].setIcon('image/forts/img_pokestop_lure.png');
+                  } else {
+                      self.forts[fort.id].setIcon('image/forts/img_pokestop.png');
+                  }
+              }
           }
         }
       }
