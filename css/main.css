@@ -74,7 +74,8 @@ html, body {
     float: left;
 }
 #bots-list {
-	max-height: 80vh;
+	max-height: 70vh;
+	overflow-y: scroll;
 }
 #bots-list::-webkit-scrollbar {
 	display: none;

@@ -161,7 +161,7 @@ var mapView = {
   settings: {},
   init: function() {
     var self = this;
-    self.settings = $.extend(true, self.settings, userInfo);
+    self.settings = $.extend(true, self.settings, userInfo, dataUpdates);
     self.bindUi();
 
     $.getScript('https://maps.googleapis.com/maps/api/js?key={0}&libraries=drawing'.format(self.settings.gMapsAPIKey), function() {
@@ -290,9 +290,9 @@ var mapView = {
     });
     self.placeTrainer();
     self.addCatchable();
-    setInterval(self.updateTrainer, 1000);
-    setInterval(self.addCatchable, 1000);
-    setInterval(self.addInventory, 5000);
+    setInterval(self.updateTrainer, self.settings.updateTrainer);
+    setInterval(self.addCatchable, self.settings.addCatchable);
+    setInterval(self.addInventory, self.settings.addInventory);
   },
   addCatchable: function() {
     var self = mapView;
@@ -979,8 +979,12 @@ var mapView = {
     xhr.onreadystatechange = function() {
       if (xhr.readyState === XMLHttpRequest.DONE) {
         if (xhr.status === 200) {
-          if (success)
-            success(JSON.parse(xhr.responseText.replace(/\bNaN\b/g, 'null')), successData);
+          if (success) {
+            try {
+              success(JSON.parse(xhr.responseText.replace(/\bNaN\b/g, 'null')), successData);
+            } catch (err) {
+            }
+          }
         } else {
           if (error)
             error(xhr);
