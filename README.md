@@ -1,3 +1,5 @@
+# Note that this project is deprecated and no further support will be provided for this repo. Use [OpenPoGoUi](https://github.com/OpenPoGo/OpenPoGoUI) with the latest version of [OpenPoGoBot](https://github.com/OpenPoGo/OpenPoGoBot) instead.
+
 # OpenPoGoBotWeb
 Web View for OpenPoGoBot and PokemonGo-Bot  
 
